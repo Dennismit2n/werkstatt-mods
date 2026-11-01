@@ -1,0 +1,32 @@
+{
+  "name": "flugdeck",
+  "version": "0.2.0",
+  "description": "Seitenleiste „Agenten“: zeigt jeden Subagenten mit Laufbalken, Zeit und letztem Werkzeug, dazu die anderen Sitzungen der App; schaut nur zu",
+  "author": {
+    "name": "Dennis Ulmer",
+    "url": "https://github.com/Dennismit2n"
+  },
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Sprache / Language",
+      "description": "Sprache der Leiste: de (Deutsch) oder en (English)",
+      "options": ["de", "en"],
+      "default": "de"
+    },
+    "autoOpen": {
+      "type": "boolean",
+      "title": "Von selbst öffnen / Open automatically",
+      "description": "Die Leiste geht beim ersten Subagenten einer Sitzung einmal von selbst auf. / Open the pane once when the first subagent of a session starts.",
+      "default": true
+    },
+    "showSessions": {
+      "type": "boolean",
+      "title": "Sitzungen zeigen / Show sessions",
+      "description": "Unter den Agenten die anderen Sitzungen der Desktop-App auflisten (App-Werkzeug list_sessions, nur lesend). / List the other sessions of the desktop app below the agents (app tool list_sessions, read-only).",
+      "default": true
+    }
+  }
+}

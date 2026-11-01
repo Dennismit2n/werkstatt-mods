@@ -1,0 +1,41 @@
+{
+  "name": "werkstatt-mods",
+  "owner": {
+    "name": "Dennis Ulmer",
+    "url": "https://github.com/Dennismit2n"
+  },
+  "description": "Fünf Mods für Claude Code aus der Werkstatt von Dennis_mit_2n: Statistik-Leiste, Limits-Band, Wächter, Limit-Pause und Agenten-Leiste. Deutsch und Englisch. / Five Claude Code mods: statistics pane, limits band, guard, limit pause and agents pane. German and English.",
+  "version": "1.0.0",
+  "plugins": [
+    {
+      "name": "statistik",
+      "source": "./statistik",
+      "category": "productivity",
+      "tags": ["mod", "statistics", "usage", "limits", "pane"]
+    },
+    {
+      "name": "werkstatt-band",
+      "source": "./werkstatt-band",
+      "category": "productivity",
+      "tags": ["mod", "limits", "band", "above-prompt"]
+    },
+    {
+      "name": "waechter",
+      "source": "./waechter",
+      "category": "safety",
+      "tags": ["mod", "guard", "agents", "shell"]
+    },
+    {
+      "name": "limitpause",
+      "source": "./limitpause",
+      "category": "productivity",
+      "tags": ["mod", "limits", "pause", "rate-limit"]
+    },
+    {
+      "name": "flugdeck",
+      "source": "./flugdeck",
+      "category": "productivity",
+      "tags": ["mod", "agents", "subagents", "pane", "sessions"]
+    }
+  ]
+}

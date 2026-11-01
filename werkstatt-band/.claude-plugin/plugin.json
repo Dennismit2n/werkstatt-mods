@@ -1,0 +1,61 @@
+{
+  "name": "werkstatt-band",
+  "version": "0.2.0",
+  "description": "Band über dem Eingabefeld: Limits (5 h, Woche, Guthaben, Kontext) in einer Zeile, dazu News-Erinnerung und Textprüfer für die eigenen Repos",
+  "author": {
+    "name": "Dennis Ulmer",
+    "url": "https://github.com/Dennismit2n"
+  },
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Sprache / Language",
+      "description": "Sprache des Bands: de (Deutsch) oder en (English)",
+      "options": ["de", "en"],
+      "default": "de"
+    },
+    "reposRoot": {
+      "type": "string",
+      "title": "Repo-Ordner / Repos folder",
+      "description": "Pfadstück, unter dem deine Repos liegen, z. B. \\source\\repos\\ oder /code/. Leer schaltet News-Erinnerung und Textprüfer ab. / Path fragment your repos live under; empty turns off the news reminder and the text check.",
+      "default": "\\source\\repos\\"
+    },
+    "newsFile": {
+      "type": "string",
+      "title": "News-Datei / News file",
+      "description": "Pfadende der Datei mit den Neuigkeiten deiner Seite, z. B. \\meine-seite\\js\\news.js. Leer schaltet die Erinnerung ab. / Path ending of your site's news file; empty turns the reminder off.",
+      "default": "\\dennismit2n.github.io\\js\\news.js"
+    },
+    "toolRepos": {
+      "type": "string",
+      "multiple": true,
+      "title": "Werkzeug-Repos / Tool repos",
+      "description": "Repo-Ordner, deren sichtbare Änderungen einen Satz in der News-Datei brauchen, je Eintrag ordner=Anzeigename. / Repo folders whose visible changes need a news line, one folder=Display name per entry.",
+      "default": [
+        "besucher-ticker=Besucher-Ticker",
+        "bigday=bigday",
+        "collective-calc=Collective-Calc",
+        "craftionary=Craftionary",
+        "dreh-das-rad=Dreh das Rad",
+        "fadenkreuz=Fadenkreuz",
+        "fontart-demo=fontART",
+        "heizwarte=Heizwarte",
+        "pocketsum=Pocketsum",
+        "prismatical=Prismatical",
+        "shrinkling=shrinkling",
+        "spectroton=Spectroton",
+        "wifi-qr=WLAN-QR",
+        "zaehlwerk=Zählwerk",
+        "zaehlwerk-ticker=Zählwerk Ticker"
+      ]
+    },
+    "textCheck": {
+      "type": "boolean",
+      "title": "Textprüfer / Text check",
+      "description": "Nach dem Schreiben einer Textdatei unter dem Repo-Ordner gerade Apostrophe und Gedankenstriche melden. / After writing a text file under the repos folder, report straight apostrophes and dashes.",
+      "default": true
+    }
+  }
+}

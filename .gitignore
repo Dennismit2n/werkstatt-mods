@@ -1,0 +1,3 @@
+# Von der Engine beim Laden aus einem Ordner geschriebene Typen
+*/.claude-plugin/types/
+*.log
