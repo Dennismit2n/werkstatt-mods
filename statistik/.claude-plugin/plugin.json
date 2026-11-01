@@ -1,0 +1,26 @@
+{
+  "name": "statistik",
+  "version": "0.2.0",
+  "description": "Nutzungsstatistik, Limits und Zählwerk (Sitzungen, Nachrichten, Token, Kalender) als Seitenleiste neben dem Chat",
+  "author": {
+    "name": "Dennis Ulmer",
+    "url": "https://github.com/Dennismit2n"
+  },
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Sprache / Language",
+      "description": "Sprache der Leiste: de (Deutsch) oder en (English)",
+      "options": ["de", "en"],
+      "default": "de"
+    },
+    "autoOpen": {
+      "type": "boolean",
+      "title": "Beim Start öffnen / Open at start",
+      "description": "Die Leiste geht beim Start jeder Sitzung von selbst auf; sonst nur mit /statistik oder dem Knopf im Band. / Open the pane when a session starts; otherwise only via /statistik or the band button.",
+      "default": true
+    }
+  }
+}

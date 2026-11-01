@@ -1,0 +1,28 @@
+{
+  "name": "limitpause",
+  "version": "0.2.0",
+  "description": "Hält Sitzung und Agenten vor jeder Modell-Anfrage an, bevor ein Limit die Grenze (99,89 %) erreicht, und macht nach dem Reset von selbst weiter",
+  "author": {
+    "name": "Dennis Ulmer",
+    "url": "https://github.com/Dennismit2n"
+  },
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Sprache / Language",
+      "description": "Sprache der Meldungen: de (Deutsch) oder en (English)",
+      "options": ["de", "en"],
+      "default": "de"
+    },
+    "limitPercent": {
+      "type": "number",
+      "title": "Grenze in Prozent / Threshold in percent",
+      "description": "Erreicht ein Limit mit Sicherheitsabstand diesen Wert, wartet jede Anfrage bis zum Reset. / When a limit would reach this value including the safety margin, every request waits for the reset.",
+      "default": 99.89,
+      "min": 50,
+      "max": 100
+    }
+  }
+}
