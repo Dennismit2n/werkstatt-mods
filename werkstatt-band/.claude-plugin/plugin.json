@@ -1,7 +1,7 @@
 {
   "name": "werkstatt-band",
-  "version": "0.2.0",
-  "description": "Band über dem Eingabefeld: Limits (5 h, Woche, Guthaben, Kontext) in einer Zeile, dazu News-Erinnerung und Textprüfer für die eigenen Repos",
+  "version": "0.2.1",
+  "description": "Band über dem Eingabefeld: Limits (5 h, Woche, Guthaben, Kontext) in einer Zeile, dazu News-Erinnerung und Textprüfer für die eigenen Repos; lässt andere Band-Mods unter sich stehen",
   "author": {
     "name": "Dennis Ulmer",
     "url": "https://github.com/Dennismit2n"

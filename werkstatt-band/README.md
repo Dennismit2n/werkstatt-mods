@@ -13,6 +13,8 @@ Band über dem Eingabefeld von Claude Code: die Limits in einer Zeile, dazu zwei
 
 `/limits` klappt das Band ein und aus. Das Band erscheint mit der ersten Antwort einer Sitzung, vorher läuft noch nichts, was zeichnen könnte.
 
+Das Band verträgt sich mit anderen Mods, die über dem Eingabefeld zeichnen: Es lässt erst die Mods hinter sich in der Kette und die Engine zeichnen und stellt deren Zeilen unter das Band (seit 0.2.1; vorher blieben sie unsichtbar).
+
 ## Einstellungen
 
 Beim Installieren fragt Claude Code danach, später änderbar in `/config`. Die Voreinstellungen passen zur Werkstatt von Dennis; wer andere Repos hat, trägt seine Werte ein:

@@ -40,17 +40,18 @@ const de = {
   argumentHint: '[an|aus]',
   notifyTitle: 'Limit-Pause',
   begin: (label: string, percent: string, when: string) =>
-    `Limit-Pause: ${label} steht bei ${percent}. Alles wartet und läuft ${when} von selbst weiter, nichts wird abgebrochen.`,
-  whenNoReset: (max: string) => `sobald es wieder Luft hat, spätestens in ${max}`,
+    `Limit-Pause: ${label} steht bei ${percent}. Die Anfrage wartet und läuft ${when} von selbst weiter, nichts wird abgebrochen.`,
   whenIn: (left: string) => `in ${left}`,
   status: (label: string, percent: string) => `Limit-Pause (${label} ${percent})`,
   endedReset: 'Limit zurückgesetzt, es geht weiter.',
   endedOff: 'Limit-Pause von Hand aufgehoben, es geht weiter.',
-  endedNoReset: (max: string) =>
-    `Limit-Pause aufgehoben: Das Limit nennt keinen Reset-Zeitpunkt, nach ${max} geht es trotzdem weiter.`,
+  stopped: (label: string, percent: string, when: string) =>
+    `Limit-Pause: ${label} steht bei ${percent}, ${when}. Die Anfrage wurde nicht gesendet, damit nichts stundenlang hängt. Nach dem Reset einfach erneut senden; /limitpause aus und erneut senden schickt sie sofort.`,
+  freeIn: (left: string) => `frei in ${left}`,
+  noResetKnown: 'Reset-Zeitpunkt unbekannt',
   stateOff: 'Limit-Pause ist für diese Sitzung AUS.',
-  stateOn: (limit: string, gap: string, from: string) =>
-    `Limit-Pause ist an: Grenze ${limit}, Abstand gerade ${gap}, also Pause ab ${from}.`,
+  stateOn: (limit: string, gap: string, from: string, maxWait: string) =>
+    `Limit-Pause ist an: Grenze ${limit}, Abstand gerade ${gap}, also Pause ab ${from}. Gewartet wird höchstens ${maxWait}, sonst wird die Anfrage mit Hinweis gestoppt; Agenten warten nie.`,
   waitingNow: (n: number, label: string, percent: string) => ` Gerade warten ${n} Anfragen (${label} ${percent}).`,
   stand: (windows: string) =>
     ` Stand: ${windows}. /limitpause aus hält nichts mehr an, /limitpause an schaltet wieder ein.`,
@@ -62,17 +63,18 @@ const en: typeof de = {
   argumentHint: '[on|off]',
   notifyTitle: 'Limit pause',
   begin: (label: string, percent: string, when: string) =>
-    `Limit pause: ${label} is at ${percent}. Everything waits and continues ${when} by itself; nothing is aborted.`,
-  whenNoReset: (max: string) => `as soon as there is room again, at the latest in ${max}`,
+    `Limit pause: ${label} is at ${percent}. The request waits and continues ${when} by itself; nothing is aborted.`,
   whenIn: (left: string) => `in ${left}`,
   status: (label: string, percent: string) => `Limit pause (${label} ${percent})`,
   endedReset: 'Limit reset, continuing.',
   endedOff: 'Limit pause lifted by hand, continuing.',
-  endedNoReset: (max: string) =>
-    `Limit pause lifted: the limit names no reset time; after ${max} it continues anyway.`,
+  stopped: (label: string, percent: string, when: string) =>
+    `Limit pause: ${label} is at ${percent}, ${when}. The request was not sent, so nothing hangs for hours. Simply send it again after the reset; /limitpause off and sending again sends it right away.`,
+  freeIn: (left: string) => `free in ${left}`,
+  noResetKnown: 'reset time unknown',
   stateOff: 'Limit pause is OFF for this session.',
-  stateOn: (limit: string, gap: string, from: string) =>
-    `Limit pause is on: threshold ${limit}, margin now ${gap}, so pausing from ${from}.`,
+  stateOn: (limit: string, gap: string, from: string, maxWait: string) =>
+    `Limit pause is on: threshold ${limit}, margin now ${gap}, so pausing from ${from}. It waits at most ${maxWait}, otherwise the request is stopped with a note; agents never wait.`,
   waitingNow: (n: number, label: string, percent: string) => ` ${n} requests are waiting now (${label} ${percent}).`,
   stand: (windows: string) =>
     ` Now: ${windows}. /limitpause off stops holding anything, /limitpause on turns it back on.`,

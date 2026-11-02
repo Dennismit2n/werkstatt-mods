@@ -60,6 +60,9 @@ function engine(
     },
   }))
   on('session.start', (_, e) => ({ cwd: e.cwd }))
+  // Steht für die Mods hinter diesem in der Kette und für die Engine: Das Band
+  // ruft next(e) und stellt deren Zeilen unter sich.
+  on('ui.render', ($, e) => $.ui.resolve(e).Text({ children: ['unten'] }))
   on('tool.check', () => ({ decision }))
   on('tool.call', (_, e) => {
     if (String(e.tool) !== 'mcp__ccd_session_mgmt__get_usage') return { result: {} }
@@ -142,6 +145,22 @@ test('Limits klappt das Band ein, die Knöpfe bleiben, /limits klappt es wieder 
     const again = await $.ui.mount({ ...BAND, surface })
     expect((await again.find({ type: 'Text', text: /^37 %$/ }))?.text).toBe('37 %')
     await again.unmount()
+  }
+})
+
+test('was andere Mods und die Engine im Band zeichnen, bleibt unter dem Band stehen, auch eingeklappt', async ($, on) => {
+  engine(on, [])
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...BAND, surface })
+    expect((await ui.find({ type: 'Text', text: /^37 %$/ }))?.text).toBe('37 %')
+    expect((await ui.find({ type: 'Text', text: /^unten$/ }))?.text).toBe('unten')
+    await ui.press({ key: 'toggle-band' })
+    expect(await ui.find({ type: 'Text', text: /^37 %$/ })).toBeUndefined()
+    expect((await ui.find({ type: 'Text', text: /^unten$/ }))?.text).toBe('unten')
+    await ui.unmount()
+    await $.command.run({ command: 'limits', args: '' } as Parameters<typeof $.command.run>[0])
   }
 })
 
