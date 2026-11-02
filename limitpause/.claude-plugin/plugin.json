@@ -1,7 +1,7 @@
 {
   "name": "limitpause",
-  "version": "0.2.0",
-  "description": "Hält Sitzung und Agenten vor jeder Modell-Anfrage an, bevor ein Limit die Grenze (99,89 %) erreicht, und macht nach dem Reset von selbst weiter",
+  "version": "0.3.0",
+  "description": "Hält eine Anfrage der Hauptsitzung kurz an, wenn ein Limit die Grenze (99,89 %) erreichen würde und der Reset nah ist; liegt er fern, stoppt sie die Runde mit Hinweis, statt stundenlang zu warten. Agenten laufen immer durch.",
   "author": {
     "name": "Dennis Ulmer",
     "url": "https://github.com/Dennismit2n"
@@ -19,10 +19,18 @@
     "limitPercent": {
       "type": "number",
       "title": "Grenze in Prozent / Threshold in percent",
-      "description": "Erreicht ein Limit mit Sicherheitsabstand diesen Wert, wartet jede Anfrage bis zum Reset. / When a limit would reach this value including the safety margin, every request waits for the reset.",
+      "description": "Erreicht ein Limit mit Sicherheitsabstand diesen Wert, wartet die Anfrage auf den Reset oder wird gestoppt. / When a limit would reach this value including the safety margin, the request waits for the reset or is stopped.",
       "default": 99.89,
       "min": 50,
       "max": 100
+    },
+    "maxWaitMinutes": {
+      "type": "number",
+      "title": "Wartezeit in Minuten / Max wait in minutes",
+      "description": "Höchstens so lange wartet eine Anfrage der Hauptsitzung auf den Reset; dauert es länger, wird sie mit Hinweis gestoppt. 0 heißt nie warten. Agenten warten nie. / A main-session request waits at most this long for the reset; if it takes longer, it is stopped with a note. 0 means never wait. Agents never wait.",
+      "default": 5,
+      "min": 0,
+      "max": 720
     }
   }
 }

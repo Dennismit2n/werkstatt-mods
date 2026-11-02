@@ -179,9 +179,13 @@ export const register: Register = (on, options) => {
   }).catch(($, e, next) => next(e))
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    // Erst die Mods hinter diesem in der Kette und die Engine zeichnen lassen;
+    // ihre Zeilen stehen unter dem Band, direkt über dem Eingabefeld. Ohne
+    // dieses next blieben sie unsichtbar (02.11.2026: Cache-Meter, Next Steps).
+    const rest = await next(e)
+    if (e.props.hasSurvey) return rest
     const hidden = await read($, isHidden)
     const pending = await read($, news)
-    if (e.props.hasSurvey) return next(e)
 
     const ui = $.ui.resolve(e)
     const { Box, Text, Button } = ui
@@ -296,6 +300,7 @@ export const register: Register = (on, options) => {
       <Box flexDirection="column">
         {limitsRow}
         {newsRow}
+        {rest}
       </Box>
     )
   }).catch(async ($, e, next) => {

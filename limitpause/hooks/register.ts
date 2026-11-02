@@ -5,19 +5,25 @@ import type { LimitWindow, Limits, Pause } from '../types'
 import { fromEngine, readLimits } from './limits'
 import { labelText, pct, setLanguage, t, untilText } from './text'
 
-// Keine Modell-Anfrage, die ein Limit über diese Grenze tragen könnte
-// (Dennis, 31.10.2026): Eine Aufgabe soll nie mehr am Limit abbrechen.
-// Einstellung limitPercent im Manifest; register setzt sie.
+// Keine Modell-Anfrage der Hauptsitzung, die ein Limit über diese Grenze tragen
+// könnte (Dennis, 31.10.2026). Einstellung limitPercent im Manifest; register setzt sie.
 export const DEFAULT_LIMIT = 99.89
 let limit = DEFAULT_LIMIT
+
+// Wie lange eine Anfrage höchstens auf den Reset wartet. Liegt der weiter weg,
+// wird die Anfrage mit Hinweis gestoppt, statt stundenlang zu hängen: Am
+// 02.11.2026 hielt die Pause fast zwei Stunden, nichts war zu sehen, und Dennis
+// musste die Sitzung beenden. Einstellung maxWaitMinutes; 0 heißt nie warten.
+export const DEFAULT_MAX_WAIT_MIN = 5
+let maxWaitMs = DEFAULT_MAX_WAIT_MIN * 60_000
 
 // Eine Anfrage kostet selbst etwas, und andere Sitzungen und Agenten zählen
 // zwischen zwei Messungen mit. Deshalb wird früher angehalten: um das Doppelte
 // des größten Sprungs der letzten zehn Anstiege, mindestens einen halben Punkt,
-// höchstens fünf. Nur die letzten zehn: Ein einzelner großer Sprung soll nicht
-// bis zum Reset ab 94,89 % sperren (31.10.2026). Ein Reset leert die Liste.
+// höchstens zwei (bis 02.11.2026 fünf: Bei vielen Untersitzungen hielt das
+// schon ab 96 % an). Nur die letzten zehn, ein Reset leert die Liste.
 const MIN_GAP = 0.5
-const MAX_GAP = 5
+const MAX_GAP = 2
 const MAX_JUMP = 20
 const KEEP_JUMPS = 10
 
@@ -30,12 +36,6 @@ const NEAR = 90
 // laufender $-Aufruf nicht. Nach dem Reset noch eine Minute Puffer.
 const NAP_MS = 30_000
 const AFTER_RESET_MS = 60_000
-const NO_RESET_RECHECK_MS = 5 * 60_000
-
-// Ohne Reset-Zeitpunkt kann die Pause nicht von selbst enden: Die Engine
-// erfährt neue Zahlen erst mit der nächsten Antwort. Nach einer halben Stunde
-// geht die Anfrage deshalb trotzdem raus.
-const NO_RESET_MAX_MS = 30 * 60_000
 
 const offState = atom({ plugin: 'limitpause', key: 'isOff' } as const, false)
 const pauseState = atom({ plugin: 'limitpause', key: 'pause' } as const, null, { shape: 'pause-1' })
@@ -90,6 +90,18 @@ export function blocking(windows: readonly LimitWindow[], model: string, gap: nu
     .filter(w => appliesTo(w.label, model) && w.percent + gap >= threshold)
     .sort((a, b) => b.percent - a.percent)
   return hit[0] ?? null
+}
+
+// Wann die Anfrage frühestens raus darf: eine Minute nach dem Reset; null,
+// wenn das Fenster keinen Reset-Zeitpunkt nennt.
+export function dueAt(hit: LimitWindow) {
+  return hit.resetsAt === null ? null : hit.resetsAt + AFTER_RESET_MS
+}
+
+// Ob sich Warten lohnt: nur mit Reset-Zeitpunkt und nur innerhalb der Wartezeit.
+export function canWait(hit: LimitWindow, now: number, maxMs = maxWaitMs) {
+  const due = dueAt(hit)
+  return due !== null && due - now <= maxMs
 }
 
 async function measure($: EngineInterface, isFresh: boolean) {
@@ -164,27 +176,24 @@ async function nap($: EngineInterface, ms: number, signal: AbortSignal): Promise
   return signal.aborted ? 'aborted' : 'woke'
 }
 
-async function begin($: EngineInterface, hit: LimitWindow) {
+async function begin($: EngineInterface, hit: LimitWindow, now: number) {
   waiting += 1
   const entry: Pause = { label: hit.label, percent: hit.percent, until: hit.resetsAt, waiting }
   await update($, pauseState, () => entry)
   if (waiting > 1) return
 
-  const now = await $.clock.now()
-  const when =
-    hit.resetsAt === null ? t().whenNoReset(untilText(NO_RESET_MAX_MS)) : t().whenIn(untilText(hit.resetsAt - now))
-  const text = t().begin(labelText(hit.label), pct(hit.percent), when)
+  const text = t().begin(labelText(hit.label), pct(hit.percent), t().whenIn(untilText((hit.resetsAt ?? now) - now)))
   $.ui.toast(text)
   $.ui.status(t().status(labelText(hit.label), pct(hit.percent)))
   void $.ui.notify(text, { title: t().notifyTitle }).catch(() => undefined)
 }
 
-// Warum eine Pause endet, und was der Toast dann sagt (abgebrochen: nichts).
-type Why = 'reset' | 'off' | 'no-reset' | 'aborted'
+// Warum eine Pause endet, und was der Toast dann sagt (abgebrochen oder
+// gestoppt: nichts, der Stopp hat seine eigene Meldung).
+type Why = 'reset' | 'off' | 'aborted' | 'stopped'
 function endedText(why: Why): string | null {
   if (why === 'reset') return t().endedReset
   if (why === 'off') return t().endedOff
-  if (why === 'no-reset') return t().endedNoReset(untilText(NO_RESET_MAX_MS))
   return null
 }
 
@@ -200,13 +209,30 @@ async function end($: EngineInterface, why: Why) {
   if (text !== null) $.ui.toast(text)
 }
 
+// Statt zu warten: die Runde mit Hinweis beenden. Die Meldung steht als
+// Log-Zeile im Verlauf (das Modell liest sie nicht), als Toast und als
+// Benachrichtigung; die Anfrage geht nicht raus.
+async function stop($: EngineInterface, turnId: string, hit: LimitWindow, now: number) {
+  const when = hit.resetsAt === null ? t().noResetKnown : t().freeIn(untilText(hit.resetsAt - now))
+  const text = t().stopped(labelText(hit.label), pct(hit.percent), when)
+  $.ui.log(text)
+  $.ui.toast(text)
+  void $.ui.notify(text, { title: t().notifyTitle }).catch(() => undefined)
+  try {
+    await $.turn.abort({ turnId })
+  } catch {
+    // Die Runde ist schon zu Ende oder nicht die laufende: Dann bleibt es bei
+    // der leeren Antwort, die der Hook zurückgibt.
+  }
+}
+
 async function statusText($: EngineInterface) {
   const reading = await measure($, true)
   const windows = reading.windows.map(w => `${labelText(w.label)} ${pct(w.percent)}`).join(', ') || t().noNumbers
   const held = await read($, pauseState)
   const state = (await read($, offState))
     ? t().stateOff
-    : t().stateOn(pct(limit), pct(reading.gap), pct(limit - reading.gap))
+    : t().stateOn(pct(limit), pct(reading.gap), pct(limit - reading.gap), untilText(maxWaitMs))
   const now = held ? t().waitingNow(held.waiting, labelText(held.label), pct(held.percent)) : ''
   return `${state}${now}${t().stand(windows)}`
 }
@@ -214,6 +240,10 @@ async function statusText($: EngineInterface) {
 export const register: Register = (on, options) => {
   setLanguage(options.language)
   limit = typeof options.limitPercent === 'number' ? options.limitPercent : DEFAULT_LIMIT
+  maxWaitMs =
+    typeof options.maxWaitMinutes === 'number' && options.maxWaitMinutes >= 0
+      ? options.maxWaitMinutes * 60_000
+      : DEFAULT_MAX_WAIT_MIN * 60_000
 
   on('session.start', async ($, e, next) => {
     // immediate: sonst wartete /limitpause aus auf das Ende der Runde, und
@@ -243,26 +273,31 @@ export const register: Register = (on, options) => {
     return { text: await statusText($) }
   })
 
-  // Vor jeder Modell-Anfrage, der Hauptsitzung wie jedes Agenten: Würde sie ein
-  // Limit über die Grenze tragen, wartet sie hier, bis das Fenster zurückgesetzt
-  // ist, und geht dann unverändert raus. Der Agent merkt davon nichts.
-  // Scheitert die Prüfung, läuft die Anfrage ungeprüft (die Engine ruft dann
-  // next für den Hook auf); anhalten soll nur, was sicher gemessen ist.
+  // Vor jeder Modell-Anfrage der Hauptsitzung: Würde sie ein Limit über die
+  // Grenze tragen und ist der Reset nah, wartet sie hier und geht dann
+  // unverändert raus. Ist der Reset fern, wird die Runde mit Hinweis beendet,
+  // damit nichts stundenlang hängt. Scheitert die Prüfung, läuft die Anfrage
+  // ungeprüft (die Engine ruft dann next für den Hook auf).
   on('turn.step', async function* ($, e, next) {
     if (await isReleased($)) return yield* next(e)
+    // Agenten werden nie angehalten: Die Desktop-App beendet einen Agenten,
+    // dessen Anfrage länger als 600 s hängt („Agent stalled“, 02.11.2026).
+    // Erreicht er das Limit, scheitert nur seine Anfrage, nicht die Sitzung.
+    if (e.agentId !== undefined) return yield* next(e)
 
     let reading = await check($, e.model, false)
     if (reading.hit === null) return yield* next(e)
 
     const aborted = { turnId: e.turnId, index: e.index, answer: '', toolUses: [], stopReason: null, usage: null }
-    const startedAt = reading.now
-    // Wann zuletzt gemessen wurde. Ohne Reset-Zeitpunkt wird alle fünf Minuten
-    // neu gemessen; das Ziel darf nicht mit jedem Häppchen weiterwandern.
-    let checkedAt = reading.now
-    await begin($, reading.hit)
+    if (!canWait(reading.hit, reading.now)) {
+      await stop($, e.turnId, reading.hit, reading.now)
+      return aborted
+    }
+
+    await begin($, reading.hit, reading.now)
     let why: Why = 'reset'
     try {
-      while (reading.hit !== null) {
+      while (reading.hit !== null && canWait(reading.hit, reading.now)) {
         if (next.signal.aborted) {
           why = 'aborted'
           return aborted
@@ -271,12 +306,7 @@ export const register: Register = (on, options) => {
           why = 'off'
           break
         }
-        if (reading.hit.resetsAt === null && reading.now - startedAt >= NO_RESET_MAX_MS) {
-          why = 'no-reset'
-          break
-        }
-        const due =
-          reading.hit.resetsAt === null ? checkedAt + NO_RESET_RECHECK_MS : reading.hit.resetsAt + AFTER_RESET_MS
+        const due = dueAt(reading.hit) ?? reading.now
         const woke = await nap($, due - reading.now, next.signal)
         if (woke === 'aborted') {
           why = 'aborted'
@@ -287,15 +317,16 @@ export const register: Register = (on, options) => {
           break
         }
         const now = await $.clock.now()
-        if (now >= due) {
-          reading = await check($, e.model, true)
-          checkedAt = reading.now
-        } else {
-          reading = { ...reading, now }
-        }
+        reading = now >= due ? await check($, e.model, true) : { ...reading, now }
       }
+      // Nach dem Reset immer noch zu voll und kein naher Reset mehr: nicht weiter warten.
+      if (reading.hit !== null && why === 'reset') why = 'stopped'
     } finally {
       await end($, why)
+    }
+    if (why === 'stopped' && reading.hit !== null) {
+      await stop($, e.turnId, reading.hit, reading.now)
+      return aborted
     }
 
     return yield* next(e)
