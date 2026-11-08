@@ -2,6 +2,8 @@
 
 Fünf Mods für Claude Code aus der Werkstatt von Dennis_mit_2n. Ein Mod ist ein Plugin mit einem Code-Modul, das Claude Code bei Ereignissen aufruft: Seitenleisten, ein Band über dem Eingabefeld, Schutzregeln. Alle fünf sprechen Deutsch und Englisch (Einstellung `language`), laufen in der Desktop-App und im Terminal und schicken nichts nach außen.
 
+**Seite mit Bildern, Installationszeilen und Prompts:** https://dennismit2n.github.io/mods.html · [Neuigkeiten](https://dennismit2n.github.io/werkstatt.html#mods-neuigkeiten)
+
 | Mod | Was er tut | Befehl |
 | --- | --- | --- |
 | [statistik](./statistik) | Seitenleiste mit Nutzungsstatistik (Sitzungen, Nachrichten, Token, Kalender), Limits und Zählwerk | `/statistik` |
@@ -11,6 +13,16 @@ Fünf Mods für Claude Code aus der Werkstatt von Dennis_mit_2n. Ein Mod ist ein
 | [flugdeck](./flugdeck) | Seitenleiste „Agenten“: jeder Subagent mit Laufbalken, Zeit und letztem Werkzeug, dazu die anderen Sitzungen der App | `/agenten` |
 
 Die Mods arbeiten einzeln. Zusammen greifen sie ineinander: Die Knöpfe „Statistik“ und „Agenten“ im Band klappen die beiden Seitenleisten auf und zu.
+
+## So sehen sie aus
+
+<p><img src="docs/werkstatt-band.png" alt="Das Werkstatt-Band über dem Eingabefeld: 5-Stunden-Fenster, Woche, Woche je Modell, Guthaben und Kontext in einer Zeile, dazu die Knöpfe Statistik und Agenten" width="690"></p>
+
+<p><img src="docs/statistik.png" alt="Die Seitenleiste Statistik: Sitzungen, Nachrichten und Token der letzten Tage, ein Kalender mit der Nutzung je Tag, darunter die Limits und das Zählwerk" width="380"> <img src="docs/flugdeck.png" alt="Die Seitenleiste Agenten: sechs Subagenten einer Sitzung mit Laufbalken und Dauer, einer davon aufgeklappt mit Modell, Zahl der Werkzeuge und Anfragen, Token und letztem Werkzeug" width="400"></p>
+
+<p><img src="docs/waechter.png" alt="Meldung des Wächters: Der Befehl hat 9.816 Zeichen, erlaubt sind 7.500, Windows kappt ab etwa 8.000 still, den Inhalt erst mit Write als Datei anlegen und dann ausführen" width="655"></p>
+
+<p><img src="docs/limitpause.png" alt="Die Antwort auf /limitpause: Limit-Pause ist an, Grenze 99,89 %, Abstand 2 %, Pause ab 97,89 %, gewartet wird höchstens 5 Minuten, dazu der Stand von 5-Stunden-Fenster und Woche" width="701"></p>
 
 ## Installation
 
@@ -40,13 +52,13 @@ Einstellungen lassen sich später in `/config` ändern; jedes README nennt sie.
 
 ## Entwickeln
 
-Jeder Mod liegt in seinem Ordner: `.claude-plugin/plugin.json` (Manifest mit `userConfig`), `hooks/register.ts(x)` (das Modul), `hooks/text.ts` (alle Texte, Deutsch und Englisch), `types/index.d.ts` (Zustand) und `tests/`. Prüfen mit `claude plugin validate <Ordner>` und `claude plugin test <Ordner>` (zusammen 37 Tests). `hooks/limits.ts` liegt gleichlautend in `statistik`, `werkstatt-band` und `limitpause`; beim Ändern alle drei Kopien gleich halten.
+Jeder Mod liegt in seinem Ordner: `.claude-plugin/plugin.json` (Manifest mit `userConfig`), `hooks/register.ts(x)` (das Modul), `hooks/text.ts` (alle Texte, Deutsch und Englisch), `types/index.d.ts` (Zustand) und `tests/`. Prüfen mit `claude plugin validate <Ordner>` und `claude plugin test <Ordner>`. `hooks/limits.ts` liegt gleichlautend in `statistik`, `werkstatt-band` und `limitpause`; beim Ändern alle drei Kopien gleich halten.
 
 Zum Ausprobieren ohne Installation: `claude --plugin-dir ./flugdeck`, oder die Ordner in `~/.claude/settings.json` unter `env.CLAUDE_CODE_PLUGIN_DIRS` eintragen (unter Windows mit `;` getrennt).
 
 ## English
 
-Five mods for Claude Code: a statistics pane, a one-line limits band, a guard (protected file, command length, agent brake), a limit pause that waits for the reset instead of failing, and an agents pane with the session's subagents and the app's other sessions. Every mod has a `language` setting (`de` or `en`). Install with `/plugin install <mod> --marketplace Dennismit2n/werkstatt-mods`; each folder's README describes the mod in German, the settings tables name every option.
+Five mods for Claude Code: a statistics pane, a one-line limits band, a guard (protected file, command length, agent brake), a limit pause that waits for the reset instead of failing, and an agents pane with the session’s subagents and the app’s other sessions. Every mod has a `language` setting (`de` or `en`). Install with `/plugin install <mod> --marketplace Dennismit2n/werkstatt-mods`; each folder’s README describes the mod in German, the settings tables name every option. Screenshots, install lines and ready-made prompts in all fourteen languages of the workshop: https://dennismit2n.github.io/mods.html
 
 ## Lizenz
 
