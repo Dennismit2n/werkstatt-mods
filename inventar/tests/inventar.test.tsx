@@ -18,7 +18,7 @@ const PANE = {
 type Engine = Parameters<TestBody>[0]
 
 // Unter der Mod steht hier die Engine: Befehl, Leisten und Werkzeugaufrufe.
-function engine(on: Parameters<TestBody>[1]) {
+function engine(on: Parameters<TestBody>[1], answer: (path: string) => object = () => ({ result: {} })) {
   const open = new Set<string>()
   on('command.register', () => ({ value: { command: 'inventar' } }))
   on('ui.open', (_, e) => {
@@ -32,7 +32,7 @@ function engine(on: Parameters<TestBody>[1]) {
   on('ui.panes', () => ({
     value: [...open].map(id => ({ id, title: id, isShown: true, isFocused: false, isPlaced: true })),
   }))
-  on('tool.call', () => ({ result: {} }))
+  on('tool.call', (_, e) => answer(String((e as unknown as Record<string, unknown>).file_path ?? '')) as { result: {} })
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   return { open }
 }
@@ -99,6 +99,27 @@ test('Dateien, Skills, Links und Konnektoren werden gezählt, das Neueste steht 
     expect(all.indexOf('src/a.ts')).toBeLessThan(all.indexOf('src/b.ts'))
     await ui.unmount()
   }
+})
+
+test('misslungene und verweigerte Dateizugriffe zählen nicht', async ($, on) => {
+  // Eine Datei fehlt, eine wird von einer anderen Mod verweigert.
+  engine(on, path => {
+    if (path.includes('fehlt')) return { result: {}, isError: true }
+    if (path.includes('gesperrt')) return { deny: 'gesperrt' }
+    return { result: {} }
+  })
+  await $.session.start({ cwd: 'C:\\arbeit', surface: 'desktop', isInteractive: true })
+
+  await call($, 'Read', { file_path: 'C:\\arbeit\\fehlt.ts' })
+  await call($, 'Edit', { file_path: 'C:\\arbeit\\fehlt.ts', old_string: 'x', new_string: 'y' })
+  await call($, 'Write', { file_path: 'C:\\arbeit\\gesperrt.ts', content: 'n' })
+  await call($, 'Read', { file_path: 'C:\\arbeit\\da.ts' })
+
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  const all = await texts(ui)
+  expect(all).toContain('da.ts')
+  expect(all.some(one => /fehlt|gesperrt/.test(one))).toBe(false)
+  await ui.unmount()
 })
 
 test('die Aufgabenliste folgt update_plan: neue Liste, weiter, erledigt', async ($, on) => {

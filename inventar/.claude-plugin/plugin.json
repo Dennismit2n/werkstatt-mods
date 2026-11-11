@@ -1,6 +1,6 @@
 {
   "name": "inventar",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Seitenleiste „In diesem Chat“: Aufgabenliste, benutzte Konnektoren, Skills, Links und die gelesenen und geschriebenen Dateien der Sitzung",
   "author": {
     "name": "Dennis Ulmer",

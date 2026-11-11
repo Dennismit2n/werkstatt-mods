@@ -11,6 +11,8 @@ const PANE = 'inventar'
 // So viele Einträge behält jede Liste, so viele zeigt die Leiste je Abschnitt.
 const KEEP = 60
 const SHOWN = 8
+// Werkzeuge, die eine Datei lesen oder schreiben.
+const FILE_TOOLS: readonly string[] = ['Read', 'Write', 'Edit', 'NotebookEdit']
 
 const EMPTY: Inventory = { todos: [], connectors: [], skills: [], links: [], read: [], written: [] }
 
@@ -167,11 +169,17 @@ export const register: Register = (on, options) => {
     const tool = String(e.tool)
     const input = e as unknown as Record<string, unknown>
     const labels = t()
-    quietly(
-      update($, items, now => note(now, tool, input, labels) ?? now),
-    )
+    const write = () => quietly(update($, items, now => note(now, tool, input, labels) ?? now))
+    // Eine Datei zählt erst, wenn der Zugriff gelungen ist: Eine Datei, die es
+    // nicht gibt, wurde nicht gelesen. Alles andere steht sofort in der Leiste.
+    if (!FILE_TOOLS.includes(tool)) {
+      write()
+      return next(e)
+    }
+    const result = await next(e)
+    if (result.deny === undefined && result.isError !== true) write()
 
-    return next(e)
+    return result
   }).catch(($, e, next) => next(e))
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
