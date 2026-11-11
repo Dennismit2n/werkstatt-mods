@@ -2,7 +2,7 @@
 // Statistik als JSON auf stdout. Pro Datei wird ein Zwischenergebnis nach
 // Größe + Änderungszeit zwischengespeichert, damit nur Neues gelesen wird.
 import { createReadStream } from 'node:fs'
-import { readdir, stat, readFile, writeFile, mkdir } from 'node:fs/promises'
+import { readdir, stat, readFile, writeFile, mkdir, rename, rm } from 'node:fs/promises'
 import { createInterface } from 'node:readline'
 import { homedir } from 'node:os'
 import { join, dirname } from 'node:path'
@@ -81,7 +81,7 @@ async function loadCache() {
 }
 
 function modelName(id) {
-  const m = id.match(/claude-(opus|sonnet|haiku|fable)-(\d+)(?:-(\d{1,2}))?(?:-|$)/)
+  const m = id.match(/claude-(opus|sonnet|haiku|fable|mythos)-(\d+)(?:-(\d{1,2}))?(?:-|$)/)
   if (!m) return id
   const family = m[1][0].toUpperCase() + m[1].slice(1)
   return m[3] ? `${family} ${m[2]}.${m[3]}` : `${family} ${m[2]}`
@@ -185,8 +185,18 @@ for await (const path of jsonlFiles(ROOT)) {
   read++
 }
 if (read > 0) {
-  await mkdir(dirname(CACHE), { recursive: true })
-  await writeFile(CACHE, JSON.stringify({ version: CACHE_VERSION, files }))
+  // Erst daneben schreiben, dann umbenennen: Jede offene Sitzung rechnet für
+  // sich, und ein halb geschriebener Zwischenspeicher hieße für die nächste
+  // „alles neu lesen“ (rund 5.000 Dateien). Klappt das Umbenennen nicht, weil
+  // gerade eine andere Sitzung schreibt, bleibt deren Fassung stehen.
+  const draft = `${CACHE}.${process.pid}.tmp`
+  try {
+    await mkdir(dirname(CACHE), { recursive: true })
+    await writeFile(draft, JSON.stringify({ version: CACHE_VERSION, files }))
+    await rename(draft, CACHE)
+  } catch {
+    await rm(draft, { force: true }).catch(() => {})
+  }
 }
 
 const today = new Date()

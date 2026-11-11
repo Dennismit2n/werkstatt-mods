@@ -3,7 +3,7 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import type { Credit, LimitWindow, RangeKey, RangeStats, Stats, TabKey, Zaehlwerk } from '../types'
 import { readLimits } from './limits'
-import { comma, compact, duration, int, labelText, money, pct, setLanguage, t, untilText } from './text'
+import { compact, duration, int, labelText, money, pct, setLanguage, t, untilText } from './text'
 
 const PANE = 'statistik'
 // Das Zählwerk ist live: jede Minute neu rechnen (mit Zwischenspeicher unter 1 s).
@@ -106,6 +106,10 @@ function heatmapSvg(data: Stats) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${rects.join('')}</svg>`
 }
 
+// Namen aus den Gesprächsdateien (Modell-Kennungen) gehen als Text ins SVG:
+// ein < oder & darin machte das Bild ungültig, und die Leiste bliebe leer.
+const xml = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
 // Waagerechte Balken mit Name links und Wert rechts, wie auf der alten Karte.
 function barsSvg(rows: { name: string; value: number; note: string }[], colors: string[]) {
   const max = Math.max(1, ...rows.map(r => r.value))
@@ -114,8 +118,8 @@ function barsSvg(rows: { name: string; value: number; note: string }[], colors: 
   const parts = rows.map((row, i) => {
     const y = i * rowH
     return (
-      `<text x="0" y="${y + 12}" fill="#c9cbd2" font-size="13" font-family="system-ui,sans-serif">${row.name}</text>` +
-      `<text x="${width}" y="${y + 12}" fill="#8e919a" font-size="12" text-anchor="end" font-family="system-ui,sans-serif">${row.note}</text>` +
+      `<text x="0" y="${y + 12}" fill="#c9cbd2" font-size="13" font-family="system-ui,sans-serif">${xml(row.name)}</text>` +
+      `<text x="${width}" y="${y + 12}" fill="#8e919a" font-size="12" text-anchor="end" font-family="system-ui,sans-serif">${xml(row.note)}</text>` +
       `<rect x="0" y="${y + 17}" width="${width}" height="6" rx="3" fill="${EMPTY}"/>` +
       `<rect x="0" y="${y + 17}" width="${Math.max(3, (row.value / max) * width)}" height="6" rx="3" fill="${colors[i % colors.length]}"/>`
     )
@@ -255,8 +259,8 @@ export const register: Register = (on, options) => {
           {tile(text.tiles.messages, int(r.messages))}
           {tile(text.tiles.tokens, compact(r.tokens))}
           {tile(text.tiles.activeDays, int(r.activeDays))}
-          {tile(text.tiles.peakHour, r.peakHour === null ? '–' : text.hour(r.peakHour))}
-          {tile(text.tiles.model, r.favorite ?? '–')}
+          {tile(text.tiles.peakHour, r.peakHour === null ? '-' : text.hour(r.peakHour))}
+          {tile(text.tiles.model, r.favorite ?? '-')}
         </Box>
         {Svg ? <Svg source={heatmapSvg(data)} alt={text.calendarAlt(WEEKS)} isInteractive /> : null}
         {r.lotr > 0 && <Text dimColor>{text.lotr(r.lotr)}</Text>}

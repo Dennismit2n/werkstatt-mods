@@ -1,6 +1,6 @@
 {
   "name": "limitpause",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Hält eine Anfrage der Hauptsitzung kurz an, wenn ein Limit die Grenze (99,89 %) erreichen würde und der Reset nah ist; liegt er fern, stoppt sie die Runde mit Hinweis, statt stundenlang zu warten. Agenten laufen immer durch.",
   "author": {
     "name": "Dennis Ulmer",

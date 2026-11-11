@@ -10,10 +10,23 @@ const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 // Das Löschwort zählt nur dort, wo ein Befehl anfängt: am Anfang, nach ; & | (
 // { oder Zeilenumbruch, hinter xargs, -exec, sudo oder in -c/-Command "…".
 // So bleibt grep -ri … <datei> frei, das -ri ist kein Remove-Item.
+//
+// Kopieren überschreibt nur, wenn die Datei das Ziel ist: Sie steht dann als
+// Letztes im Befehl oder hinter -Destination. Eine Sicherung VON der Datei
+// (cp launch.json launch.json.bak) bleibt frei. tee überschreibt, tee -a hängt an.
 export function harmPattern(fileName: string) {
   const file = escapeRe(fileName)
+  const start = `(?:^|[;&|({\\n]|\\bxargs\\s|-exec\\s|\\bsudo\\s|-c(?:ommand)?\\s+["']?)\\s*`
+  const copy = `${start}(?:cp|copy|cpi|copy-item)\\b[^;&|\\n]*`
+  const path = `["']?[^\\s"';&|]*${file}`
   return new RegExp(
-    `(?:^|[;&|({\\n]|\\bxargs\\s|-exec\\s|\\bsudo\\s|-c(?:ommand)?\\s+["']?)\\s*(?:rm|del|erase|rd|rmdir|mv|move|ri|remove-item|move-item|rename-item|set-content|out-file|clear-content|truncate)\\b[^;&|\\n]*${file}|>\\s*["']?[^\\s"'<>|;&]*${file}`,
+    [
+      `${start}(?:rm|del|erase|rd|rmdir|mv|move|ri|remove-item|move-item|rename-item|set-content|out-file|clear-content|truncate)\\b[^;&|\\n]*${file}`,
+      `>\\s*["']?[^\\s"'<>|;&]*${file}`,
+      `${copy}\\s${path}["']?\\s*(?:-force\\s*)?["']?\\s*(?:$|[;&|\\n)}])`,
+      `${copy}-destination\\s+${path}(?![\\w.])`,
+      `${start}tee\\b(?![^;&|\\n]*\\s(?:-a|--append)\\b)[^;&|\\n]*${file}`,
+    ].join('|'),
     'i',
   )
 }
@@ -55,7 +68,8 @@ const startedHere = new Map<string, TrackedAgent>()
 async function liveAgents($: EngineInterface): Promise<TrackedAgent[]> {
   const now = await $.clock.now()
   const listed = await $.agent.list()
-  const isActive = (status: string) => status === 'running' || status === 'pending'
+  // „waiting“ (wartet auf eine Freigabe) belegt den Speicher genauso wie „running“.
+  const isActive = (status: string) => status === 'running' || status === 'pending' || status === 'waiting'
   const byId = new Map(listed.map(one => [one.id, one]))
   const known = new Map((await read($, agents)).map(one => [one.id, one]))
   for (const one of startedHere.values()) known.set(one.id, one)

@@ -64,6 +64,28 @@ test('launch.json: Überschreiben und Löschen gesperrt, Lesen und andere Dateie
   ]) {
     expect((await $.tool.call({ tool: 'PowerShell', command })).deny).toContain('launch.json')
   }
+
+  // Überschreiben durch Kopieren oder tee: gesperrt, wenn die Datei das Ziel ist.
+  for (const command of [
+    'cp neu.json .claude/.claude/launch.json',
+    'cp -f neu.json "C:/Users/nutzer/.claude/.claude/launch.json"',
+    'Copy-Item neu.json .claude\\launch.json -Force',
+    'Copy-Item -Destination .claude\\launch.json -Path neu.json',
+    'cd .claude; copy neu.json launch.json',
+    'echo "{}" | tee .claude/launch.json',
+  ]) {
+    expect((await $.tool.call({ tool: 'PowerShell', command })).deny).toContain('launch.json')
+  }
+
+  // Eine Sicherung VON der Datei und Anhängen bleiben frei.
+  for (const command of [
+    'cp .claude/.claude/launch.json launch.json.bak',
+    'Copy-Item .claude\\launch.json -Destination sicherung.json',
+    'cp launch.json /tmp/sicherung/',
+    'echo "x" | tee -a launch.json',
+  ]) {
+    expect((await $.tool.call({ tool: 'PowerShell', command })).deny).toBeUndefined()
+  }
 })
 
 test('Befehlslänge: über 7.500 Zeichen gesperrt, darunter frei', async ($, on) => {

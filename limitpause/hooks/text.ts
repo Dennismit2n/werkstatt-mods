@@ -52,7 +52,7 @@ const de = {
   stateOff: 'Limit-Pause ist für diese Sitzung AUS.',
   stateOn: (limit: string, gap: string, from: string, maxWait: string) =>
     `Limit-Pause ist an: Grenze ${limit}, Abstand gerade ${gap}, also Pause ab ${from}. Gewartet wird höchstens ${maxWait}, sonst wird die Anfrage mit Hinweis gestoppt; Agenten warten nie.`,
-  waitingNow: (n: number, label: string, percent: string) => ` Gerade warten ${n} Anfragen (${label} ${percent}).`,
+  waitingNow: (n: number, label: string, percent: string) => ` Gerade ${n === 1 ? 'wartet 1 Anfrage' : `warten ${n} Anfragen`} (${label} ${percent}).`,
   stand: (windows: string) =>
     ` Stand: ${windows}. /limitpause aus hält nichts mehr an, /limitpause an schaltet wieder ein.`,
   noNumbers: 'keine Zahlen',
@@ -75,7 +75,7 @@ const en: typeof de = {
   stateOff: 'Limit pause is OFF for this session.',
   stateOn: (limit: string, gap: string, from: string, maxWait: string) =>
     `Limit pause is on: threshold ${limit}, margin now ${gap}, so pausing from ${from}. It waits at most ${maxWait}, otherwise the request is stopped with a note; agents never wait.`,
-  waitingNow: (n: number, label: string, percent: string) => ` ${n} requests are waiting now (${label} ${percent}).`,
+  waitingNow: (n: number, label: string, percent: string) => ` ${n === 1 ? '1 request is' : `${n} requests are`} waiting now (${label} ${percent}).`,
   stand: (windows: string) =>
     ` Now: ${windows}. /limitpause off stops holding anything, /limitpause on turns it back on.`,
   noNumbers: 'no numbers',

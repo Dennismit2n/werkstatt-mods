@@ -1,6 +1,6 @@
 {
   "name": "waechter",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Schützt eine gemeinsame Datei (launch.json), stoppt zu lange Shell-Befehle und bremst parallele Agenten",
   "author": {
     "name": "Dennis Ulmer",
