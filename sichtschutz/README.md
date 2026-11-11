@@ -6,12 +6,12 @@ Sichtschutz fürs Bildschirmteilen in Claude Code: Solange er an ist, sind im Ve
 
 | Muster | Beispiel | Im Verlauf |
 | --- | --- | --- |
-| Mailadresse | `max@example.org` | `████████████` |
-| Telefonnummer | `0151 23456789`, `+49 30 1234567` | `████████████` |
-| Betrag mit Währung | `12,50 €`, `$3.81`, `400 EUR` | `███████` |
-| IBAN | `DE89 3704 0044 0532 0130 00` | `████████████` |
-| Nutzerordner | `C:\Users\name\projekt` | `C:\Users\████\projekt` |
-| Eigene Wörter | ein Kundenname aus der Einstellung | `██████` |
+| Mailadresse | `max@example.org` | `▒▒▒▒▒▒▒▒▒▒▒▒` |
+| Telefonnummer | `0151 23456789`, `+49 30 1234567` | `▒▒▒▒▒▒▒▒▒▒▒▒` |
+| Betrag mit Währung | `12,50 €`, `$3.81`, `400 EUR` | `▒▒▒▒▒▒▒` |
+| IBAN | `DE89 3704 0044 0532 0130 00` | `▒▒▒▒▒▒▒▒▒▒▒▒` |
+| Nutzerordner | `C:\Users\name\projekt` | `C:\Users\▒▒▒▒\projekt` |
+| Eigene Wörter | ein Kundenname aus der Einstellung | `▒▒▒▒▒▒` |
 
 Geschwärzt werden deine Eingaben, Claudes Antworten, die Ausgaben von Befehlen und die Zeilen von Werkzeugaufrufen samt ihren Ergebnissen. Daten, Uhrzeiten, Versionsnummern und Zahlen ohne Währung bleiben lesbar.
 

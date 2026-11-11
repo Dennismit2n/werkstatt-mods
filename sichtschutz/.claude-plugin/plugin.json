@@ -1,6 +1,6 @@
 {
   "name": "sichtschutz",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Schwärzt beim Bildschirmteilen Mailadressen, Telefonnummern, Beträge, IBANs, den Namen des Nutzerordners und eigene Wörter im Verlauf; gespeichert und ans Modell gesendet wird weiter das Original",
   "author": {
     "name": "Dennis Ulmer",

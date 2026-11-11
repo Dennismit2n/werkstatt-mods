@@ -12,7 +12,7 @@ const isOnState = atom({ plugin: 'sichtschutz', key: 'isOn' } as const, null)
 
 const AMBER = '#c98a3a'
 const SIZE = 'footnote'
-const BAR = '█'
+const BAR = '▒'
 
 // Einstellungen aus dem Manifest (userConfig), gesetzt in register.
 let words: string[] = []

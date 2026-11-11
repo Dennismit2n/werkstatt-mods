@@ -28,6 +28,12 @@ Die Mods arbeiten einzeln. Zusammen greifen sie ineinander: Die Knöpfe „Stati
 
 <p><img src="docs/limitpause.png" alt="Die Antwort auf /limitpause: Limit-Pause ist an, Grenze 99,89 %, Abstand 2 %, Pause ab 97,89 %, gewartet wird höchstens 5 Minuten, dazu der Stand von 5-Stunden-Fenster und Woche" width="701"></p>
 
+<p><img src="docs/uebergabe.png" alt="Das Band der Mod uebergabe: Übergabe liegt bereit, daneben die Knöpfe Neue Sitzung starten, Pfad kopieren und Schließen" width="690"></p>
+
+<p><img src="docs/sichtschutz.png" alt="Der Sichtschutz im Verlauf: Mailadresse, Telefonnummer, Betrag und IBAN sind durch Balken ersetzt, im Dateipfad nur der Name des Nutzerordners" width="622"></p>
+
+<p><img src="docs/inventar.png" alt="Die Seitenleiste In diesem Chat: Aufgabenliste mit 3 von 5 erledigt, darunter benutzte Konnektoren, Skills, geschriebene und gelesene Dateien und der Knopf Leeren" width="420"> <img src="docs/schalttafel.png" alt="Die Seitenleiste Mods: 19 von 19 Mods laufen, je Mod Name, Version, Zustand aktiv, Beschreibung, Befehle und der Schalter Ausschalten" width="340"></p>
+
 ## Installation
 
 Im Terminal, am Prompt von Claude Code, je Mod eine Zeile:

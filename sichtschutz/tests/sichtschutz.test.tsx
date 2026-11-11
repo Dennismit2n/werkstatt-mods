@@ -56,12 +56,12 @@ const row = async ($: Engine, component: string, props: Record<string, unknown>)
 }
 
 test('die Muster: Mail, Telefon, Betrag, IBAN, Nutzerordner und eigene Wörter', () => {
-  expect(mask('Schreib an max.muster@example.org bitte.', [])).toBe('Schreib an ████████████ bitte.')
-  expect(mask('Ruf an: 0151 23456789 oder +49 30 1234567.', [])).toBe('Ruf an: ████████████ oder ████████████.')
-  expect(mask('Das kostet 12,50 € oder $3.81, also 400 EUR.', [])).toBe('Das kostet ███████ oder █████, also ███████.')
-  expect(mask('IBAN DE89 3704 0044 0532 0130 00 steht da.', [])).toBe('IBAN ████████████ steht da.')
-  expect(mask('C:\\Users\\maria\\source\\repos und /home/thomas/x', [])).toBe('C:\\Users\\█████\\source\\repos und /home/██████/x')
-  expect(mask('Kunde Müller GmbH und müller privat', ['Müller'])).toBe('Kunde ██████ GmbH und ██████ privat')
+  expect(mask('Schreib an max.muster@example.org bitte.', [])).toBe('Schreib an ▒▒▒▒▒▒▒▒▒▒▒▒ bitte.')
+  expect(mask('Ruf an: 0151 23456789 oder +49 30 1234567.', [])).toBe('Ruf an: ▒▒▒▒▒▒▒▒▒▒▒▒ oder ▒▒▒▒▒▒▒▒▒▒▒▒.')
+  expect(mask('Das kostet 12,50 € oder $3.81, also 400 EUR.', [])).toBe('Das kostet ▒▒▒▒▒▒▒ oder ▒▒▒▒▒, also ▒▒▒▒▒▒▒.')
+  expect(mask('IBAN DE89 3704 0044 0532 0130 00 steht da.', [])).toBe('IBAN ▒▒▒▒▒▒▒▒▒▒▒▒ steht da.')
+  expect(mask('C:\\Users\\maria\\source\\repos und /home/thomas/x', [])).toBe('C:\\Users\\▒▒▒▒▒\\source\\repos und /home/▒▒▒▒▒▒/x')
+  expect(mask('Kunde Müller GmbH und müller privat', ['Müller'])).toBe('Kunde ▒▒▒▒▒▒ GmbH und ▒▒▒▒▒▒ privat')
 })
 
 test('was kein Muster ist, bleibt lesbar: Daten, Versionen, Token-Zahlen, Uhrzeiten', () => {
@@ -73,7 +73,7 @@ test('was kein Muster ist, bleibt lesbar: Daten, Versionen, Token-Zahlen, Uhrzei
 
 test('Daten von Werkzeugen: jede Zeichenkette wird geschwärzt, die Form bleibt', () => {
   const input = { to: ['a@b.de'], body: { text: 'Preis 9 €', n: 3, ok: true }, none: null }
-  expect(maskDeep(input)).toEqual({ to: ['██████'], body: { text: 'Preis ████', n: 3, ok: true }, none: null })
+  expect(maskDeep(input)).toEqual({ to: ['▒▒▒▒▒▒'], body: { text: 'Preis ▒▒▒▒', n: 3, ok: true }, none: null })
 })
 
 test('aus: der Verlauf bleibt, wie er ist; an: Zeilen und Werkzeugdaten sind geschwärzt', async ($, on) => {
@@ -87,9 +87,9 @@ test('aus: der Verlauf bleibt, wie er ist; an: Zeilen und Werkzeugdaten sind ges
 
   expect((await run($)).text).toContain('Sichtschutz an.')
   expect(w.status.at(-1)).toBe('Sichtschutz an')
-  expect(await row($, 'UserMessage', user)).toBe('Mail an ████████████')
-  expect(await row($, 'AssistantMessage', reply)).toBe('Die Rechnung über ██████████ ging raus.')
-  expect(await row($, 'ToolUse', tool)).toContain('C:\\\\Users\\\\█████\\\\x.txt')
+  expect(await row($, 'UserMessage', user)).toBe('Mail an ▒▒▒▒▒▒▒▒▒▒▒▒')
+  expect(await row($, 'AssistantMessage', reply)).toBe('Die Rechnung über ▒▒▒▒▒▒▒▒▒▒ ging raus.')
+  expect(await row($, 'ToolUse', tool)).toContain('C:\\\\Users\\\\▒▒▒▒▒\\\\x.txt')
 
   const band = await $.ui.mount({ ...BAND, surface: 'desktop' })
   expect((await band.find({ type: 'Text', text: /Sichtschutz/ }))?.text).toBe('Sichtschutz an: Der Verlauf ist geschwärzt.')
@@ -121,7 +121,7 @@ test(
     expect(w.status.at(-1)).toBe('Sichtschutz an')
 
     const reply = { text: 'ACME zahlt 500 € an x@y.de.', isFirstOfReply: true }
-    expect(await row($, 'AssistantMessage', reply)).toBe('████ zahlt 500 € an ██████.')
+    expect(await row($, 'AssistantMessage', reply)).toBe('▒▒▒▒ zahlt 500 € an ▒▒▒▒▒▒.')
   },
 )
 

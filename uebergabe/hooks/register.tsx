@@ -134,13 +134,15 @@ export const register: Register = (on, options) => {
             </Text>
             <Button
               key="uebergabe-start"
-              variant="primary"
+              plain
               onPress={() => {
                 submitSoon($, text.startNewPrompt(path), why => $.ui.toast(text.failed(why)))
                 void update($, phase, () => 'idle')
               }}
             >
-              <Text size={SIZE}>{text.startNew}</Text>
+              <Text size={SIZE} color={GREEN} weight="semibold">
+                {text.startNew}
+              </Text>
             </Button>
             <Button
               key="uebergabe-copy"
