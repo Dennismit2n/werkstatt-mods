@@ -7,12 +7,14 @@ Lange Sitzungen werden teuer und ungenauer. Statt den Verlauf zu komprimieren, l
 - **Erinnern:** Nach jeder Antwort misst sie den Kontext. Ab der Grenze (Standard 250.000 Token) steht über dem Eingabefeld „Kontext bei 262.000 Token: Zeit für eine Übergabe an eine frische Sitzung?“ mit den Knöpfen „Übergabe schreiben“ und „Später“. „Später“ blendet den Hinweis aus, bis der Kontext um weitere 50.000 Token gewachsen ist.
 - **Schreiben:** Der Knopf oder `/uebergabe` schickt Claude einen festen Auftrag: Ziel und Anlass, Stand, Entscheidungen, jede berührte Datei mit Pfad, benutzte Skills und Links, offene Punkte, Fallen und die Regeln des Nutzers, als Markdown-Datei. Die letzte Zeile der Antwort nennt den Pfad („ÜBERGABE: …“); daran erkennt die Mod, dass die Übergabe fertig ist.
 - **Weiterreichen:** Danach steht im Band „Übergabe liegt bereit“ mit den Knöpfen „Neue Sitzung starten“ (Claude startet eine Sitzung, die zuerst die Übergabe liest), „Pfad kopieren“ und „Schließen“.
+- **Nachziehen:** Arbeitest du nach dem Schreiben in derselben Sitzung weiter, kennt die Übergabe das nicht mehr. Das Band zeigt dann „Übergabe veraltet: …, seitdem 2 Antworten weitergearbeitet“ mit dem Knopf „Aktualisieren“. Er lässt Claude dieselbe Datei auf den Stand bringen: Die betroffenen Abschnitte werden geändert, es wird kein Nachtrag angehängt. Danach liegt sie wieder bereit.
 
-Der Auftrag an Claude und die neue Sitzung sind gewöhnliche Eingaben in deinem Namen; sie zählen wie jede andere Nachricht gegen dein Kontingent.
+Der Auftrag an Claude, das Aktualisieren und die neue Sitzung sind gewöhnliche Eingaben in deinem Namen; sie zählen wie jede andere Nachricht gegen dein Kontingent.
 
 ## Bedienung
 
 - `/uebergabe` fordert die Übergabe jederzeit an, auch unter der Grenze.
+- `/stand` holt eine kurze Auskunft in den Chat, ohne Datei: Fertig, Angefangen, Nicht gespeichert, Wartet auf dich, Nächster Schritt. Gedacht für den Moment, in dem du in eine Sitzung zurückkommst und nicht mehr weißt, was gemacht ist und wo es weitergeht. Claude schaut dafür nur lesend nach und fängt danach nicht von selbst an zu arbeiten. Die Auskunft lässt eine bereitliegende Übergabe nicht veralten.
 - Die Knöpfe im Band über dem Eingabefeld.
 
 ## Einstellungen
@@ -44,6 +46,6 @@ Zum Entwickeln aus einem Ordner: `claude --plugin-dir <Pfad zu uebergabe>`, oder
 
 ## Prüfen
 
-`claude plugin validate <Ordner>` und `claude plugin test <Ordner>` (6 Tests).
+`claude plugin validate <Ordner>` und `claude plugin test <Ordner>` (8 Tests).
 
 Lizenz: MIT.

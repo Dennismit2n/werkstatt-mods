@@ -11,7 +11,7 @@ Neun Mods für Claude Code aus der Werkstatt von Dennis_mit_2n. Ein Mod ist ein 
 | [waechter](./waechter) | Schützt eine gemeinsame Datei, stoppt zu lange Shell-Befehle, bremst parallele Subagenten, wählt ihnen ein sparsames Modell und verkleinert Browser-Fotos | `/agentenbremse` |
 | [limitpause](./limitpause) | Hält jede Modell-Anfrage vor der Limit-Grenze an und macht nach dem Reset von selbst weiter | `/limitpause` |
 | [flugdeck](./flugdeck) | Seitenleiste „Agenten“: jeder Subagent mit Laufbalken, Zeit und letztem Werkzeug, dazu die anderen Sitzungen der App | `/agenten` |
-| [uebergabe](./uebergabe) | Erinnert ab einer Kontextgrenze an eine Übergabe, lässt Claude sie ausführlich schreiben und startet damit eine frische Sitzung | `/uebergabe` |
+| [uebergabe](./uebergabe) | Erinnert ab einer Kontextgrenze an eine Übergabe, lässt Claude sie ausführlich schreiben und startet damit eine frische Sitzung | `/uebergabe`, `/stand` |
 | [inventar](./inventar) | Seitenleiste „In diesem Chat“: Aufgaben, benutzte Konnektoren, Skills, Links und die gelesenen und geschriebenen Dateien | `/inventar` |
 | [sichtschutz](./sichtschutz) | Schwärzt beim Bildschirmteilen Mailadressen, Nummern, Beträge und eigene Wörter im Verlauf | `/sichtschutz` |
 | [schalttafel](./schalttafel) | Seitenleiste „Mods“: alle Mods mit Version und Befehlen, dazu ein Schalter für die nächste Sitzung | `/mods` |
@@ -30,7 +30,7 @@ Die Mods arbeiten einzeln. Zusammen greifen sie ineinander: Die Knöpfe „Stati
 
 <p><img src="docs/uebergabe.png" alt="Das Band der Mod uebergabe: Übergabe liegt bereit, daneben die Knöpfe Neue Sitzung starten, Pfad kopieren und Schließen" width="690"></p>
 
-<p><img src="docs/sichtschutz.png" alt="Der Sichtschutz im Verlauf: Mailadresse, Telefonnummer, Betrag und IBAN sind durch Balken ersetzt, im Dateipfad nur der Name des Nutzerordners" width="622"></p>
+<p><img src="docs/sichtschutz.png" alt="Der Sichtschutz im Verlauf: In einer Zeile sind Mailadresse, Betrag und Telefonnummer durch gedämpfte Balken ersetzt" width="690"></p>
 
 <p><img src="docs/inventar.png" alt="Die Seitenleiste In diesem Chat: Aufgabenliste mit 3 von 5 erledigt, darunter benutzte Konnektoren, Skills, geschriebene und gelesene Dateien und der Knopf Leeren" width="420"> <img src="docs/schalttafel.png" alt="Die Seitenleiste Mods: 19 von 19 Mods laufen, je Mod Name, Version, Zustand aktiv, Beschreibung, Befehle und der Schalter Ausschalten" width="340"></p>
 

@@ -142,6 +142,72 @@ test('der Knopf lässt Claude die Übergabe schreiben; die Pfadzeile der Antwort
   await ui.unmount()
 })
 
+test('nach dem Schreiben weitergearbeitet: Das Band nennt die Übergabe veraltet, „Aktualisieren“ zieht dieselbe Datei nach', async ($, on) => {
+  const w = engine(on, 40_000)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  await $.command.run({ command: 'uebergabe', args: '' } as unknown as Parameters<Engine['command']['run']>[0])
+  await w.settle()
+  await done($, `ÜBERGABE: ${FILE}`)
+
+  const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  expect(await find(ui, /liegt bereit/)).toBe('Übergabe liegt bereit: uebergabe-2026-11-11.md')
+  expect(await ui.find({ key: 'uebergabe-update' })).toBeUndefined()
+
+  // Die Antwort eines Subagenten zählt nicht, die der Hauptsitzung schon.
+  await done($, 'Zwischenstand', 'a1')
+  expect(await find(ui, /veraltet/)).toBeUndefined()
+  await done($, 'Noch etwas geändert.')
+  expect(await find(ui, /veraltet/)).toBe('Übergabe veraltet: uebergabe-2026-11-11.md, seitdem 1 Antwort weitergearbeitet')
+  await done($, 'Und noch etwas.')
+  expect(await find(ui, /veraltet/)).toContain('seitdem 2 Antworten weitergearbeitet')
+
+  await ui.press({ key: 'uebergabe-update' })
+  await w.settle()
+  expect(w.sent.length).toBe(2)
+  expect(w.sent[1]).toContain(`Bring die Übergabe auf den Stand von jetzt: ${FILE}`)
+  expect(w.sent[1]).toContain('ÜBERGABE: <voller Pfad der Datei>')
+  expect(await find(ui, /wird aktualisiert/)).toBe('Übergabe wird aktualisiert …')
+
+  // Ohne Pfadzeile bleibt die alte Übergabe stehen und gilt weiter als veraltet.
+  await done($, 'Ich habe nur nachgedacht.')
+  expect(w.toasts.at(-1)).toContain('gilt weiter als veraltet')
+  expect(await find(ui, /veraltet/)).toContain('seitdem 3 Antworten weitergearbeitet')
+
+  await ui.press({ key: 'uebergabe-update' })
+  await w.settle()
+  await done($, `Nachgezogen.\n\nÜBERGABE: ${FILE}`)
+  expect(await find(ui, /liegt bereit/)).toBe('Übergabe liegt bereit: uebergabe-2026-11-11.md')
+  expect(await find(ui, /veraltet/)).toBeUndefined()
+  await ui.unmount()
+})
+
+test('/stand fragt die Übersicht ab; ihre Antwort lässt eine bereitliegende Übergabe nicht veralten', async ($, on) => {
+  const w = engine(on, 40_000)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const run = (command: string) => $.command.run({ command, args: '' } as unknown as Parameters<Engine['command']['run']>[0])
+
+  await run('uebergabe')
+  await w.settle()
+  expect((await run('stand')).text).toBe('Gerade wird die Übergabe geschrieben. /stand geht danach.')
+  await done($, `ÜBERGABE: ${FILE}`)
+
+  const asked = await run('stand')
+  await w.settle()
+  expect(asked.text).toContain('Stand angefordert')
+  expect(w.sent.length).toBe(2)
+  expect(w.sent[1]).toContain('**Wartet auf dich:**')
+  expect(w.sent[1]).toContain('**Nächster Schritt:**')
+  expect(w.sent[1]).toContain('keine Datei')
+
+  const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  await done($, '**Fertig:** alles')
+  expect(await find(ui, /liegt bereit/)).toBe('Übergabe liegt bereit: uebergabe-2026-11-11.md')
+  // Die nächste gewöhnliche Antwort zählt wieder.
+  await done($, 'Weitergearbeitet.')
+  expect(await find(ui, /veraltet/)).toContain('seitdem 1 Antwort weitergearbeitet')
+  await ui.unmount()
+})
+
 test('/uebergabe geht auch unter der Grenze; eine Antwort ohne Pfadzeile setzt zurück', async ($, on) => {
   const w = engine(on, 40_000)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })

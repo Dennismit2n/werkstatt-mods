@@ -1,6 +1,6 @@
 {
   "name": "uebergabe",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Erinnert ab einer Kontextgrenze an eine Übergabe, lässt Claude sie ausführlich schreiben und startet damit eine frische Sitzung",
   "author": {
     "name": "Dennis Ulmer",

@@ -15,6 +15,8 @@ const phase = atom({ plugin: 'uebergabe', key: 'phase' } as const, 'idle')
 const file = atom({ plugin: 'uebergabe', key: 'file' } as const, null)
 const tokens = atom({ plugin: 'uebergabe', key: 'tokens' } as const, null)
 const snoozedUntil = atom({ plugin: 'uebergabe', key: 'snoozedUntil' } as const, 0)
+const turnsSince = atom({ plugin: 'uebergabe', key: 'turnsSince' } as const, 0)
+const isStatusAsked = atom({ plugin: 'uebergabe', key: 'isStatusAsked' } as const, false)
 
 const AMBER = '#c98a3a'
 const GREEN = '#5aa846'
@@ -70,6 +72,20 @@ async function requestHandoff($: EngineInterface) {
   return true
 }
 
+// Die bereitliegende Übergabe nachziehen: Claude ergänzt dieselbe Datei um das,
+// was seit dem Schreiben passiert ist. Der Pfad bleibt im Zustand; daran erkennt
+// das Band „wird aktualisiert“ und eine Antwort ohne Pfadzeile fällt auf die alte
+// Übergabe zurück statt auf Anfang.
+async function requestUpdate($: EngineInterface, path: string) {
+  if ((await read($, phase)) === 'writing') return
+  await update($, phase, () => 'writing')
+  const text = t()
+  submitSoon($, text.updateInstruction(path), why => {
+    void update($, phase, () => 'ready')
+    $.ui.toast(text.failed(why))
+  })
+}
+
 export const register: Register = (on, options) => {
   setLanguage(options.language)
   threshold =
@@ -83,6 +99,11 @@ export const register: Register = (on, options) => {
       description: t().commandDescription,
     })
 
+    await $.command.register({
+      name: 'stand',
+      description: t().statusDescription,
+    })
+
     return next(e)
   })
 
@@ -92,21 +113,50 @@ export const register: Register = (on, options) => {
     return { text: isStarted ? t().started : t().busy }
   })
 
+  // /stand: die kurze Auskunft, wo die Sitzung steht. Keine Datei, nur eine
+  // Antwort im Chat; sie zählt nicht als Weiterarbeit nach einer Übergabe.
+  on('command.run', { command: 'stand' }, async $ => {
+    const text = t()
+    if ((await read($, phase)) === 'writing') return { text: text.statusBusy }
+    await update($, isStatusAsked, () => true)
+    submitSoon($, text.statusInstruction, why => {
+      void update($, isStatusAsked, () => false)
+      $.ui.toast(text.statusFailed(why))
+    })
+
+    return { text: text.statusStarted }
+  })
+
   // Nach jeder Antwort der Hauptsitzung: Kontext messen und, wenn gerade eine
   // Übergabe geschrieben wurde, ihren Pfad aus der letzten Zeile lesen.
   on('turn.complete', async ($, e, next) => {
     if (e.agentId === undefined) {
       await measure($)
-      if ((await read($, phase)) === 'writing') {
+      const now = await read($, phase)
+      const wasStatus = await read($, isStatusAsked)
+      if (wasStatus) await update($, isStatusAsked, () => false)
+      if (wasStatus && now !== 'writing') {
+        // Nur die Auskunft von /stand: nichts zu lesen, nichts zu zählen.
+      } else if (now === 'writing') {
         const path = pathFrom(e.answer)
+        const old = await read($, file)
         if (path !== null) {
           await update($, file, () => path)
+          await update($, turnsSince, () => 0)
           await update($, phase, () => 'ready')
+        } else if (old !== null) {
+          // Ein Nachziehen ohne Pfadzeile oder abgebrochen: Die alte Übergabe bleibt, weiter veraltet.
+          await update($, turnsSince, n => n + 1)
+          await update($, phase, () => 'ready')
+          if (!e.isAborted) $.ui.toast(t().noMarkerUpdate)
         } else if (!e.isAborted && e.answer.trim() !== '') {
           // Eine Antwort ohne Pfadzeile: zurück auf Anfang, mit Hinweis.
           await update($, phase, () => 'idle')
           $.ui.toast(t().noMarker)
         }
+      } else if (now === 'ready' && !(e.isAborted && e.answer.trim() === '')) {
+        // Nach dem Schreiben wurde weitergearbeitet: Die Übergabe kennt diese Antwort nicht.
+        await update($, turnsSince, n => n + 1)
       }
     }
 
@@ -122,16 +172,25 @@ export const register: Register = (on, options) => {
     const path = await read($, file)
     const used = await read($, tokens)
     const snooze = await read($, snoozedUntil)
+    const since = await read($, turnsSince)
     const { Box, Text, Button } = $.ui.resolve(e)
     const text = t()
 
     const line = (() => {
       if (now === 'ready' && path !== null) {
+        const isStale = since > 0
         return (
           <Box key="uebergabe" flexDirection="row" gap={2} alignItems="center" flexWrap="wrap">
-            <Text size={SIZE} color={GREEN} wrap="truncate-end">
-              {text.ready(baseName(path))}
+            <Text size={SIZE} color={isStale ? AMBER : GREEN} wrap="truncate-end">
+              {isStale ? text.stale(baseName(path), since) : text.ready(baseName(path))}
             </Text>
+            {isStale ? (
+              <Button key="uebergabe-update" plain onPress={() => void requestUpdate($, path)}>
+                <Text size={SIZE} color={AMBER} weight="semibold">
+                  {text.refresh}
+                </Text>
+              </Button>
+            ) : null}
             <Button
               key="uebergabe-start"
               plain
@@ -140,9 +199,15 @@ export const register: Register = (on, options) => {
                 void update($, phase, () => 'idle')
               }}
             >
-              <Text size={SIZE} color={GREEN} weight="semibold">
-                {text.startNew}
-              </Text>
+              {isStale ? (
+                <Text size={SIZE} dimColor>
+                  {text.startNew}
+                </Text>
+              ) : (
+                <Text size={SIZE} color={GREEN} weight="semibold">
+                  {text.startNew}
+                </Text>
+              )}
             </Button>
             <Button
               key="uebergabe-copy"
@@ -167,7 +232,7 @@ export const register: Register = (on, options) => {
         return (
           <Box key="uebergabe" flexDirection="row">
             <Text size={SIZE} color={AMBER}>
-              {text.writing}
+              {path === null ? text.writing : text.updating}
             </Text>
           </Box>
         )

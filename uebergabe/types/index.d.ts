@@ -12,6 +12,10 @@ declare module 'claude-code' {
       tokens: number | null
       // Bis zu diesem Kontextstand bleibt der Hinweis nach „Später“ aus.
       snoozedUntil: number
+      // Antworten der Hauptsitzung, seit die Übergabe geschrieben wurde. Ab 1 gilt sie als veraltet.
+      turnsSince: number
+      // Die nächste Antwort ist nur die Auskunft von /stand und zählt nicht als Weiterarbeit.
+      isStatusAsked: boolean
     }
   }
 }
