@@ -12,6 +12,11 @@ Drei Schutzregeln für Claude Code, die auch dann gelten, wenn Claude selbst arb
 
 `/agentenbremse` schaltet die Bremse für die laufende Sitzung aus und wieder an. Die anderen beiden Regeln haben keinen Schalter, lassen sich aber in den Einstellungen abstellen.
 
+## Zwei Sparregeln (seit 0.3.0)
+
+- **Modellwahl für Subagenten:** Ohne eigene Angabe erbt jeder Subagent das Modell der Hauptsitzung, auch wenn er nur sucht oder liest. Der Wächter setzt je Agententyp ein sparsameres Modell (Einstellung `agentModels`). Ein Modell, das im Agent-Aufruf steht, gewinnt immer; das sagt der Wächter Claude im Systemprompt, damit schwere Aufgaben ausdrücklich ein starkes Modell bekommen. Forks, Teammitglieder und Agenten eines Workflows bleiben unberührt.
+- **Kleinere Browser-Fotos:** Bildschirmfotos aus dem Browser der Desktop-App kommen in halber Breite und Höhe an, wenn der Aufruf keine Größe nennt. Ein Foto von 1280 × 720 kostet so rund 300 statt 1.200 Token. Die Koordinaten für Klicks bleiben die der vollen Größe.
+
 ## Einstellungen
 
 Beim Installieren fragt Claude Code danach, später änderbar in `/config`:
@@ -24,6 +29,8 @@ Beim Installieren fragt Claude Code danach, später änderbar in `/config`:
 | `heavyMax` | `2` | Schwere Subagenten gleichzeitig |
 | `allMax` | `4` | Subagenten gleichzeitig insgesamt |
 | `lightAgents` | Explore, claude-code-guide, Plan, statusline-setup | Agententypen, die nur gegen die Gesamtzahl zählen |
+| `agentModels` | Explore=haiku, claude-code-guide=haiku, statusline-setup=haiku, general-purpose=sonnet | Modell je Agententyp, wenn der Aufruf selbst keines nennt; leere Liste schaltet die Regel ab |
+| `screenshotScale` | `0.5` | Größe der Bildschirmfotos aus dem Browser der App; `1` schaltet die Regel ab |
 
 ## Voraussetzungen
 
@@ -43,6 +50,6 @@ Zum Entwickeln aus einem Ordner: `claude --plugin-dir <Pfad zu waechter>`, oder 
 
 ## Prüfen
 
-`claude plugin validate <Ordner>` und `claude plugin test <Ordner>` (7 Tests).
+`claude plugin validate <Ordner>` und `claude plugin test <Ordner>` (11 Tests).
 
 Lizenz: MIT.

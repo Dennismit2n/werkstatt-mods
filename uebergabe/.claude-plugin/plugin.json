@@ -1,0 +1,40 @@
+{
+  "name": "uebergabe",
+  "version": "0.1.0",
+  "description": "Erinnert ab einer Kontextgrenze an eine Übergabe, lässt Claude sie ausführlich schreiben und startet damit eine frische Sitzung",
+  "author": {
+    "name": "Dennis Ulmer",
+    "url": "https://github.com/Dennismit2n"
+  },
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Sprache / Language",
+      "description": "Sprache des Bands und der Übergabe: de (Deutsch) oder en (English)",
+      "options": ["de", "en"],
+      "default": "de"
+    },
+    "thresholdTokens": {
+      "type": "number",
+      "title": "Hinweis ab Token / Hint from tokens",
+      "description": "Ab so vielen Token im Kontext schlägt das Band eine Übergabe vor. 0 schaltet den Hinweis ab, /uebergabe geht immer. / From this many tokens in the context the band suggests a handoff; 0 turns the hint off, /uebergabe always works.",
+      "default": 250000,
+      "min": 0
+    },
+    "remindStep": {
+      "type": "number",
+      "title": "Erneut erinnern nach / Remind again after",
+      "description": "Nach „Später“ kommt der Hinweis wieder, wenn der Kontext um so viele Token gewachsen ist. / After \"Later\" the hint returns once the context has grown by this many tokens.",
+      "default": 50000,
+      "min": 1000
+    },
+    "folder": {
+      "type": "string",
+      "title": "Ordner für Übergaben / Folder for handoffs",
+      "description": "Wohin Claude die Übergabe schreibt. Leer: dorthin, wo Übergaben nach deinen eigenen Regeln liegen, sonst in den Arbeitsordner unter uebergaben. / Where Claude writes the handoff; empty: where your own rules keep handoffs, otherwise the working folder under uebergaben.",
+      "default": ""
+    }
+  }
+}

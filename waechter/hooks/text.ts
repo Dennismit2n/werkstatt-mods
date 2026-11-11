@@ -30,6 +30,8 @@ const de = {
   denyRace:
     'Agenten-Bremse: Zu viele Starts auf einmal, die Prüfung kam nicht hinterher. Agenten nacheinander starten. Ausschalten für diese Sitzung: /agentenbremse',
   checkFailed: 'Wächter: Prüfung fehlgeschlagen, Aufruf läuft ungeprüft.',
+  modelRule: (rules: string) =>
+    `Subagenten ohne eigene Modellangabe laufen in dieser Sitzung auf einem sparsameren Modell (${rules}). Ein Modell, das du im Agent-Aufruf im Feld model nennst, gewinnt immer: Nenne für schwierige, heikle oder mehrstufige Aufgaben ausdrücklich ein starkes Modell, einfache Such- und Leseaufgaben brauchen keine Angabe.`,
 }
 
 const en: typeof de = {
@@ -48,6 +50,8 @@ const en: typeof de = {
   denyRace:
     'Agent brake: Too many starts at once, the check could not keep up. Start agents one after another. Turn off for this session: /agentenbremse',
   checkFailed: 'Guard: check failed, the call runs unchecked.',
+  modelRule: (rules: string) =>
+    `Subagents without a model of their own run on a cheaper model in this session (${rules}). A model you name in the Agent call's model field always wins: name a strong model explicitly for hard, delicate or multi-step tasks; simple search and read tasks need none.`,
 }
 
 export const t = () => (lang === 'en' ? en : de)

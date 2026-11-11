@@ -1,0 +1,39 @@
+{
+  "name": "sichtschutz",
+  "version": "0.1.0",
+  "description": "Schwärzt beim Bildschirmteilen Mailadressen, Telefonnummern, Beträge, IBANs, den Namen des Nutzerordners und eigene Wörter im Verlauf; gespeichert und ans Modell gesendet wird weiter das Original",
+  "author": {
+    "name": "Dennis Ulmer",
+    "url": "https://github.com/Dennismit2n"
+  },
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Sprache / Language",
+      "description": "Sprache der Meldungen: de (Deutsch) oder en (English)",
+      "options": ["de", "en"],
+      "default": "de"
+    },
+    "words": {
+      "type": "string",
+      "multiple": true,
+      "title": "Eigene Wörter / Own words",
+      "description": "Namen und Wörter, die zusätzlich geschwärzt werden (Kundennamen, Firmen, der eigene Name). Groß- und Kleinschreibung ist egal. / Names and words masked in addition (clients, companies, your own name); case does not matter.",
+      "default": []
+    },
+    "maskMoney": {
+      "type": "boolean",
+      "title": "Beträge schwärzen / Mask amounts",
+      "description": "Geldbeträge mit Währung (12,50 €, $3.81, 400 EUR) werden geschwärzt. / Amounts with a currency are masked.",
+      "default": true
+    },
+    "startOn": {
+      "type": "boolean",
+      "title": "Beim Start an / On at start",
+      "description": "Der Sichtschutz ist in jeder neuen Sitzung von Anfang an eingeschaltet. / The screen guard is on from the start of every new session.",
+      "default": false
+    }
+  }
+}

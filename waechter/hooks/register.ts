@@ -45,6 +45,35 @@ const DEFAULT_HEAVY_MAX = 2
 const DEFAULT_ALL_MAX = 4
 const DEFAULT_LIGHT = ['Explore', 'claude-code-guide', 'Plan', 'statusline-setup']
 const MAX_AGE_MS = 60 * 60 * 1000
+// Sparregel 1: Welches Modell ein Agententyp bekommt, wenn der Aufruf selbst
+// keines nennt. Sonst erbt jeder Subagent das (teure) Modell der Hauptsitzung,
+// auch wenn er nur sucht oder liest. Ein im Aufruf genanntes Modell gewinnt
+// immer; das steht auch im Systemprompt, damit Claude schwere Aufgaben
+// ausdrücklich auf ein starkes Modell legen kann.
+const DEFAULT_AGENT_MODELS = [
+  'Explore=haiku',
+  'claude-code-guide=haiku',
+  'statusline-setup=haiku',
+  'general-purpose=sonnet',
+]
+// Sparregel 2: Bildschirmfotos aus dem Browser der App kommen verkleinert an,
+// wenn der Aufruf keine eigene Größe nennt. Ein Foto von 1280 × 720 kostet in
+// voller Größe rund 1.200 Token, halbiert rund 300. Die Koordinaten für Klicks
+// bleiben die der vollen Größe (so beschreibt es das Werkzeug selbst).
+const DEFAULT_SCREENSHOT_SCALE = 0.5
+const BROWSER_TOOL = /(^|__)Claude_Browser__computer$/
+
+// Einträge „Typ=Modell“ zu einer Tabelle; ohne „=“ oder ohne Modell zählt der Eintrag nicht.
+export function parseModels(entries: readonly unknown[]): Record<string, string> {
+  const map: Record<string, string> = {}
+  for (const entry of entries) {
+    if (typeof entry !== 'string') continue
+    const [type = '', ...rest] = entry.split('=')
+    const model = rest.join('=').trim()
+    if (type.trim() !== '' && model !== '') map[type.trim()] = model
+  }
+  return map
+}
 
 // Einstellungen aus dem Manifest, gesetzt in register. Eine leere Datei
 // schaltet den Dateischutz ab, eine Befehlslänge 0 die Längenprüfung.
@@ -55,6 +84,8 @@ let maxCommand = DEFAULT_MAX_COMMAND
 let heavyMax = DEFAULT_HEAVY_MAX
 let allMax = DEFAULT_ALL_MAX
 let light = new Set<string>(DEFAULT_LIGHT)
+let agentModels = parseModels(DEFAULT_AGENT_MODELS)
+let screenshotScale = DEFAULT_SCREENSHOT_SCALE
 
 const agents = atom({ plugin: 'waechter', key: 'agents' } as const, [])
 const isBrakeOff = atom({ plugin: 'waechter', key: 'isBrakeOff' } as const, false)
@@ -100,6 +131,18 @@ export const register: Register = (on, options) => {
   heavyMax = typeof options.heavyMax === 'number' ? options.heavyMax : DEFAULT_HEAVY_MAX
   allMax = typeof options.allMax === 'number' ? options.allMax : DEFAULT_ALL_MAX
   light = new Set(Array.isArray(options.lightAgents) ? options.lightAgents.map(String) : DEFAULT_LIGHT)
+  agentModels = parseModels(Array.isArray(options.agentModels) ? options.agentModels : DEFAULT_AGENT_MODELS)
+  screenshotScale = typeof options.screenshotScale === 'number' ? options.screenshotScale : DEFAULT_SCREENSHOT_SCALE
+
+  // Claude erfährt die Modellregel, damit es für schwere Aufgaben selbst ein
+  // Modell nennen kann. Ohne Regeln kommt kein Abschnitt dazu.
+  on('prompt.compose', async ($, e, next) => {
+    const composed = await next(e)
+    const rules = Object.entries(agentModels)
+    if (rules.length === 0) return composed
+    const text = t().modelRule(rules.map(([type, model]) => `${type} → ${model}`).join(', '))
+    return { ...composed, sections: [...composed.sections, { id: 'waechter:agent-models', text, scope: 'session' }] }
+  }).catch(($, e, next) => next(e))
 
   on('session.start', async ($, e, next) => {
     await $.command.register({
@@ -120,7 +163,17 @@ export const register: Register = (on, options) => {
 
   on('tool.call', async ($, e, next) => {
     const tool = String(e.tool)
-    const input = e as unknown as { file_path?: string; command?: string }
+    const input = e as unknown as { file_path?: string; command?: string; action?: string; scale?: number }
+
+    if (
+      screenshotScale > 0 &&
+      screenshotScale < 1 &&
+      BROWSER_TOOL.test(tool) &&
+      input.action === 'screenshot' &&
+      input.scale === undefined
+    ) {
+      return next({ ...e, scale: screenshotScale } as typeof e)
+    }
 
     if (protectedFile !== '' && tool === 'Write' && norm(input.file_path ?? '').endsWith(protectedFile)) {
       const exists = await $.fs.stat(input.file_path ?? '').then(
@@ -145,7 +198,14 @@ export const register: Register = (on, options) => {
     return next(e)
   })
 
-  on('agent.spawn', async ($, e, next) => {
+  on('agent.spawn', async ($, original, next) => {
+    // Modellwahl: nur wenn der Aufruf kein Modell nennt. Forks erben immer,
+    // Agenten eines Workflows und Teammitglieder behalten, was ihr Start vorgibt.
+    const routed =
+      original.model === undefined && !original.fork && !original.isTeammate && original.workflow === undefined
+        ? agentModels[original.subagentType]
+        : undefined
+    const e = routed === undefined ? original : { ...original, model: routed }
     if (await read($, isBrakeOff)) return next(e)
 
     // Startet das Modell mehrere Agenten in einer Nachricht, kommen die Hooks

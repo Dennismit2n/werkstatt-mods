@@ -187,3 +187,66 @@ test(
     expect((await $.agent.spawn(spawn('Scout'))).deny).toBeUndefined()
   },
 )
+
+// Wie engine(on), nur dass Agentenstarts und Werkzeugaufrufe mitgeschrieben werden.
+function watching(on: Parameters<TestBody>[1]) {
+  const models: (string | undefined)[] = []
+  const scales: unknown[] = []
+  on('command.register', () => ({ value: { command: 'agentenbremse' } }))
+  on('clock.now', () => ({ value: 1_000_000 }))
+  on('ui.toast', () => ({ value: undefined }))
+  on('agent.list', () => ({ value: [] }))
+  let spawned = 0
+  on('agent.spawn', (_, e) => {
+    models.push(e.model)
+    return { model: e.model ?? 'claude-fable-5-2', agentId: `neu${(spawned += 1)}` }
+  })
+  on('tool.call', (_, e) => {
+    scales.push((e as unknown as { scale?: number }).scale)
+    return { result: {} }
+  })
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  return { models, scales }
+}
+
+test('Modellwahl: Suchen läuft auf Haiku, Allzweck auf Sonnet, ein genanntes Modell bleibt', async ($, on) => {
+  const seen = watching(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+
+  await $.agent.spawn(spawn('Explore'))
+  await $.agent.spawn(spawn('general-purpose'))
+  await $.agent.spawn({ ...spawn('general-purpose'), model: 'fable' })
+  await $.agent.spawn(spawn('Plan'))
+  expect(seen.models).toEqual(['haiku', 'sonnet', 'fable', undefined])
+})
+
+test('Modellwahl aus: leere Liste lässt jeden Start, wie er ist', { options: { agentModels: [] } }, async ($, on) => {
+  const seen = watching(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+
+  await $.agent.spawn(spawn('Explore'))
+  expect(seen.models).toEqual([undefined])
+})
+
+test('Browser-Fotos: halbe Größe, außer der Aufruf nennt selbst eine', async ($, on) => {
+  const seen = watching(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const call = (input: Record<string, unknown>) =>
+    $.tool.call({ tool: 'mcp__Claude_Browser__computer', ...input } as unknown as Parameters<typeof $.tool.call>[0])
+
+  await call({ action: 'screenshot' })
+  await call({ action: 'screenshot', scale: 1 })
+  await call({ action: 'left_click', coordinate: [1, 2] })
+  await call({ action: 'zoom', region: [0, 0, 10, 10] })
+  expect(seen.scales).toEqual([0.5, 1, undefined, undefined])
+})
+
+test('Browser-Fotos aus: mit 1 bleibt jedes Foto in voller Größe', { options: { screenshotScale: 1 } }, async ($, on) => {
+  const seen = watching(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+
+  await $.tool.call({ tool: 'mcp__Claude_Browser__computer', action: 'screenshot' } as unknown as Parameters<
+    typeof $.tool.call
+  >[0])
+  expect(seen.scales).toEqual([undefined])
+})

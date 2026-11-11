@@ -1,0 +1,20 @@
+{
+  "name": "schalttafel",
+  "version": "0.1.0",
+  "description": "Seitenleiste mit allen geladenen Mods: Name, Version, Befehle und ein Schalter, der einen Mod ab der nächsten Sitzung aus- oder einschaltet",
+  "author": {
+    "name": "Dennis Ulmer",
+    "url": "https://github.com/Dennismit2n"
+  },
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Sprache / Language",
+      "description": "Sprache der Leiste: de (Deutsch) oder en (English)",
+      "options": ["de", "en"],
+      "default": "de"
+    }
+  }
+}

@@ -4,8 +4,8 @@
     "name": "Dennis Ulmer",
     "url": "https://github.com/Dennismit2n"
   },
-  "description": "Fünf Mods für Claude Code aus der Werkstatt von Dennis_mit_2n: Statistik-Leiste, Limits-Band, Wächter, Limit-Pause und Agenten-Leiste. Deutsch und Englisch. / Five Claude Code mods: statistics pane, limits band, guard, limit pause and agents pane. German and English.",
-  "version": "1.0.0",
+  "description": "Neun Mods für Claude Code aus der Werkstatt von Dennis_mit_2n: Statistik-Leiste, Limits-Band, Wächter, Limit-Pause, Agenten-Leiste, Übergabe, Chat-Inventar, Sichtschutz und Schalttafel. Deutsch und Englisch. / Nine Claude Code mods: statistics pane, limits band, guard, limit pause, agents pane, handoff, chat inventory, screen guard and switchboard. German and English.",
+  "version": "1.1.0",
   "plugins": [
     {
       "name": "statistik",
@@ -36,6 +36,30 @@
       "source": "./flugdeck",
       "category": "productivity",
       "tags": ["mod", "agents", "subagents", "pane", "sessions"]
+    },
+    {
+      "name": "uebergabe",
+      "source": "./uebergabe",
+      "category": "productivity",
+      "tags": ["mod", "handoff", "context", "band"]
+    },
+    {
+      "name": "inventar",
+      "source": "./inventar",
+      "category": "productivity",
+      "tags": ["mod", "inventory", "connectors", "files", "pane"]
+    },
+    {
+      "name": "sichtschutz",
+      "source": "./sichtschutz",
+      "category": "safety",
+      "tags": ["mod", "privacy", "screen-share", "redaction"]
+    },
+    {
+      "name": "schalttafel",
+      "source": "./schalttafel",
+      "category": "productivity",
+      "tags": ["mod", "plugins", "switchboard", "pane"]
     }
   ]
 }

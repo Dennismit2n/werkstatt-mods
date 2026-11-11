@@ -1,7 +1,7 @@
 {
   "name": "waechter",
-  "version": "0.2.1",
-  "description": "Schützt eine gemeinsame Datei (launch.json), stoppt zu lange Shell-Befehle und bremst parallele Agenten",
+  "version": "0.3.0",
+  "description": "Schützt eine gemeinsame Datei (launch.json), stoppt zu lange Shell-Befehle, bremst parallele Agenten, wählt ihnen ein sparsames Modell und verkleinert Browser-Fotos",
   "author": {
     "name": "Dennis Ulmer",
     "url": "https://github.com/Dennismit2n"
@@ -49,6 +49,21 @@
       "title": "Leichte Agententypen / Light agent types",
       "description": "Agententypen, die nur gegen die Gesamtzahl zählen. / Agent types that count only against the total.",
       "default": ["Explore", "claude-code-guide", "Plan", "statusline-setup"]
+    },
+    "agentModels": {
+      "type": "string",
+      "multiple": true,
+      "title": "Modell je Agententyp / Model per agent type",
+      "description": "Einträge Typ=Modell: Diese Agententypen laufen auf dem genannten Modell, wenn der Aufruf selbst keines nennt. Leere Liste schaltet die Regel ab. / Entries type=model: these agent types run on the named model unless the call names one itself; an empty list turns the rule off.",
+      "default": ["Explore=haiku", "claude-code-guide=haiku", "statusline-setup=haiku", "general-purpose=sonnet"]
+    },
+    "screenshotScale": {
+      "type": "number",
+      "title": "Größe der Browser-Fotos / Browser screenshot scale",
+      "description": "Bildschirmfotos aus dem Browser der App werden auf diesen Anteil verkleinert, wenn der Aufruf keine Größe nennt (0,5 = halbe Breite und Höhe, rund ein Viertel der Token). 1 schaltet die Regel ab. / Screenshots from the app browser are scaled to this share unless the call names a scale (0.5 = half width and height, about a quarter of the tokens); 1 turns the rule off.",
+      "default": 0.5,
+      "min": 0.1,
+      "max": 1
     }
   }
 }
