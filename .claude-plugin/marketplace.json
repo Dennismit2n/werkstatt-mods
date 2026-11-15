@@ -4,62 +4,122 @@
     "name": "Dennis Ulmer",
     "url": "https://github.com/Dennismit2n"
   },
-  "description": "Neun Mods für Claude Code aus der Werkstatt von Dennis_mit_2n: Statistik-Leiste, Limits-Band, Wächter, Limit-Pause, Agenten-Leiste, Übergabe, Chat-Inventar, Sichtschutz und Schalttafel. Deutsch und Englisch. / Nine Claude Code mods: statistics pane, limits band, guard, limit pause, agents pane, handoff, chat inventory, screen guard and switchboard. German and English.",
-  "version": "1.1.0",
+  "description": "Zehn Mods für Claude Code aus der Werkstatt von Dennis_mit_2n: Statistik-Leiste, Limits-Band, Wächter, Limit-Pause, Agenten-Leiste, Übergabe, Chat-Inventar, Sichtschutz, Schalttafel und Ampel. Deutsch und Englisch. / Ten Claude Code mods: statistics pane, limits band, guard, limit pause, agents pane, handoff, chat inventory, screen guard, switchboard and traffic light. German and English.",
+  "version": "1.2.0",
   "plugins": [
     {
       "name": "statistik",
       "source": "./statistik",
       "category": "productivity",
-      "tags": ["mod", "statistics", "usage", "limits", "pane"]
+      "tags": [
+        "mod",
+        "statistics",
+        "usage",
+        "limits",
+        "pane"
+      ]
     },
     {
       "name": "werkstatt-band",
       "source": "./werkstatt-band",
       "category": "productivity",
-      "tags": ["mod", "limits", "band", "above-prompt"]
+      "tags": [
+        "mod",
+        "limits",
+        "band",
+        "above-prompt"
+      ]
     },
     {
       "name": "waechter",
       "source": "./waechter",
       "category": "safety",
-      "tags": ["mod", "guard", "agents", "shell"]
+      "tags": [
+        "mod",
+        "guard",
+        "agents",
+        "shell"
+      ]
     },
     {
       "name": "limitpause",
       "source": "./limitpause",
       "category": "productivity",
-      "tags": ["mod", "limits", "pause", "rate-limit"]
+      "tags": [
+        "mod",
+        "limits",
+        "pause",
+        "rate-limit"
+      ]
     },
     {
       "name": "flugdeck",
       "source": "./flugdeck",
       "category": "productivity",
-      "tags": ["mod", "agents", "subagents", "pane", "sessions"]
+      "tags": [
+        "mod",
+        "agents",
+        "subagents",
+        "pane",
+        "sessions"
+      ]
     },
     {
       "name": "uebergabe",
       "source": "./uebergabe",
       "category": "productivity",
-      "tags": ["mod", "handoff", "context", "band"]
+      "tags": [
+        "mod",
+        "handoff",
+        "context",
+        "band"
+      ]
     },
     {
       "name": "inventar",
       "source": "./inventar",
       "category": "productivity",
-      "tags": ["mod", "inventory", "connectors", "files", "pane"]
+      "tags": [
+        "mod",
+        "inventory",
+        "connectors",
+        "files",
+        "pane"
+      ]
     },
     {
       "name": "sichtschutz",
       "source": "./sichtschutz",
       "category": "safety",
-      "tags": ["mod", "privacy", "screen-share", "redaction"]
+      "tags": [
+        "mod",
+        "privacy",
+        "screen-share",
+        "redaction"
+      ]
     },
     {
       "name": "schalttafel",
       "source": "./schalttafel",
       "category": "productivity",
-      "tags": ["mod", "plugins", "switchboard", "pane"]
+      "tags": [
+        "mod",
+        "plugins",
+        "switchboard",
+        "pane"
+      ]
+    },
+    {
+      "name": "ampel",
+      "source": "./ampel",
+      "category": "productivity",
+      "tags": [
+        "mod",
+        "status",
+        "background",
+        "band",
+        "above-prompt"
+      ]
     }
   ]
 }

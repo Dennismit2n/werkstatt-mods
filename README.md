@@ -1,6 +1,6 @@
 # werkstatt-mods
 
-Neun Mods für Claude Code aus der Werkstatt von Dennis_mit_2n. Ein Mod ist ein Plugin mit einem Code-Modul, das Claude Code bei Ereignissen aufruft: Seitenleisten, ein Band über dem Eingabefeld, Schutzregeln. Alle neun sprechen Deutsch und Englisch (Einstellung `language`), laufen in der Desktop-App und im Terminal und schicken nichts nach außen.
+Zehn Mods für Claude Code aus der Werkstatt von Dennis_mit_2n. Ein Mod ist ein Plugin mit einem Code-Modul, das Claude Code bei Ereignissen aufruft: Seitenleisten, ein Band über dem Eingabefeld, Schutzregeln. Alle zehn sprechen Deutsch und Englisch (Einstellung `language`), laufen in der Desktop-App und im Terminal und schicken nichts nach außen.
 
 **Seite mit Bildern, Installationszeilen und Prompts:** https://dennismit2n.github.io/mods.html · [Neuigkeiten](https://dennismit2n.github.io/werkstatt.html#mods-neuigkeiten)
 
@@ -15,6 +15,7 @@ Neun Mods für Claude Code aus der Werkstatt von Dennis_mit_2n. Ein Mod ist ein 
 | [inventar](./inventar) | Seitenleiste „In diesem Chat“: Aufgaben, benutzte Konnektoren, Skills, Links und die gelesenen und geschriebenen Dateien | `/inventar` |
 | [sichtschutz](./sichtschutz) | Schwärzt beim Bildschirmteilen Mailadressen, Nummern, Beträge und eigene Wörter im Verlauf | `/sichtschutz` |
 | [schalttafel](./schalttafel) | Seitenleiste „Mods“: alle Mods mit Version und Befehlen, dazu ein Schalter für die nächste Sitzung | `/mods` |
+| [ampel](./ampel) | Ampel über dem Eingabefeld: grün, wenn nichts mehr läuft, gelb, solange Claude oder etwas im Hintergrund arbeitet (mit Namen), rot, wenn etwas abgebrochen wurde oder fehlschlug | `/ampel` |
 
 Die Mods arbeiten einzeln. Zusammen greifen sie ineinander: Die Knöpfe „Statistik“ und „Agenten“ im Band klappen die beiden Seitenleisten auf und zu.
 
@@ -29,6 +30,8 @@ Die Mods arbeiten einzeln. Zusammen greifen sie ineinander: Die Knöpfe „Stati
 <p><img src="docs/limitpause.png" alt="Die Antwort auf /limitpause: Limit-Pause ist an, Grenze 99,89 %, Abstand 2 %, Pause ab 97,89 %, gewartet wird höchstens 5 Minuten, dazu der Stand von 5-Stunden-Fenster und Woche" width="701"></p>
 
 <p><img src="docs/uebergabe.png" alt="Das Band der Mod uebergabe: Übergabe liegt bereit, daneben die Knöpfe Neue Sitzung starten, Pfad kopieren und Schließen" width="690"></p>
+
+<p><img src="docs/ampel.png" alt="Die Ampel über dem Eingabefeld: kleines Gehäuse mit Schrauben, rote und grüne Lampe leuchten, daneben Alles steht, nichts läuft, darunter rot 01:05 Zug abgebrochen (Esc oder Stopp) und der Knopf Gesehen" width="670"></p>
 
 <p><img src="docs/sichtschutz.png" alt="Der Sichtschutz im Verlauf: In einer Zeile sind Mailadresse, Betrag und Telefonnummer durch gedämpfte Balken ersetzt" width="690"></p>
 
@@ -48,6 +51,7 @@ Im Terminal, am Prompt von Claude Code, je Mod eine Zeile:
 /plugin install inventar --marketplace Dennismit2n/werkstatt-mods
 /plugin install sichtschutz --marketplace Dennismit2n/werkstatt-mods
 /plugin install schalttafel --marketplace Dennismit2n/werkstatt-mods
+/plugin install ampel --marketplace Dennismit2n/werkstatt-mods
 ```
 
 Beim ersten Mal fragt Claude Code `Add marketplace?` (mit `y` bestätigen), dann nach dem Geltungsbereich (Enter für den Nutzer) und nach den Einstellungen des Mods, etwa der Sprache. Danach läuft der Mod sofort in dieser Sitzung und in jeder weiteren.
@@ -72,7 +76,7 @@ Zum Ausprobieren ohne Installation: `claude --plugin-dir ./flugdeck`, oder die O
 
 ## English
 
-Nine mods for Claude Code: a statistics pane, a one-line limits band, a guard (protected file, command length, agent brake, a cheaper model per subagent type, smaller browser screenshots), a limit pause that waits for the reset instead of failing, an agents pane with the session’s subagents and the app’s other sessions, a handoff that moves a long chat to a fresh session, a chat inventory pane, a screen guard that masks private data while you share your screen, and a switchboard listing every mod. Every mod has a `language` setting (`de` or `en`). Install with `/plugin install <mod> --marketplace Dennismit2n/werkstatt-mods`; each folder’s README describes the mod in German, the settings tables name every option. Screenshots, install lines and ready-made prompts in all fourteen languages of the workshop: https://dennismit2n.github.io/mods.html
+Ten mods for Claude Code: a statistics pane, a one-line limits band, a guard (protected file, command length, agent brake, a cheaper model per subagent type, smaller browser screenshots), a limit pause that waits for the reset instead of failing, an agents pane with the session’s subagents and the app’s other sessions, a handoff that moves a long chat to a fresh session, a chat inventory pane, a screen guard that masks private data while you share your screen, a switchboard listing every mod, and a traffic light above the prompt that shows whether anything is still running, what runs in the background and what was stopped or failed. Every mod has a `language` setting (`de` or `en`). Install with `/plugin install <mod> --marketplace Dennismit2n/werkstatt-mods`; each folder’s README describes the mod in German, the settings tables name every option. Screenshots, install lines and ready-made prompts in all fourteen languages of the workshop: https://dennismit2n.github.io/mods.html
 
 ## Lizenz
 

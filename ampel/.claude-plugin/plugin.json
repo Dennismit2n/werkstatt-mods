@@ -1,0 +1,32 @@
+{
+  "name": "ampel",
+  "version": "0.1.0",
+  "description": "Ampel über dem Eingabefeld: grün, wenn nichts mehr läuft, gelb, solange Claude oder etwas im Hintergrund arbeitet, rot, wenn etwas abgebrochen wurde oder fehlschlug",
+  "author": {
+    "name": "Dennis Ulmer",
+    "url": "https://github.com/Dennismit2n"
+  },
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Sprache / Language",
+      "description": "Sprache der Ampel: de (Deutsch) oder en (English)",
+      "options": ["de", "en"],
+      "default": "de"
+    },
+    "showSessions": {
+      "type": "boolean",
+      "title": "Nebensitzungen zeigen / Show side sessions",
+      "description": "Laufende verknüpfte Sitzungen der Desktop-App mit anzeigen (liest list_sessions alle 20 s, nur wenn das ohne Freigabe-Dialog geht). / Also show running linked sessions of the desktop app.",
+      "default": true
+    },
+    "toastWhenDone": {
+      "type": "boolean",
+      "title": "Meldung bei Grün / Toast on green",
+      "description": "Kurze Meldung, sobald nach einem Hintergrundlauf alles fertig ist. / A short toast once everything has finished after background work.",
+      "default": true
+    }
+  }
+}
