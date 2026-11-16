@@ -84,10 +84,17 @@ export function noteJump(jumps: readonly number[], before: number | undefined, a
   return jump < MAX_JUMP ? [...jumps, jump].slice(-KEEP_JUMPS) : [...jumps]
 }
 
+// Die App nennt nur ganze Prozent (get_usage, geprüft 16.11.2026): Hinter
+// „99 %“ kann schon 99,9 % stecken. Bei einer ganzen Zahl zählt deshalb ein
+// voller Punkt Unschärfe zum Abstand, sonst liefe bei 99 % mit 0,5 Abstand
+// (99,5 < 99,89) die nächste Anfrage noch durch.
+export const ROUNDING = 1
+export const blur = (percent: number) => (Number.isInteger(percent) ? ROUNDING : 0)
+
 // Das vollste Fenster, das mit dem Abstand die Grenze erreicht; sonst null.
 export function blocking(windows: readonly LimitWindow[], model: string, gap: number, threshold = limit) {
   const hit = windows
-    .filter(w => appliesTo(w.label, model) && w.percent + gap >= threshold)
+    .filter(w => appliesTo(w.label, model) && w.percent + gap + blur(w.percent) >= threshold)
     .sort((a, b) => b.percent - a.percent)
   return hit[0] ?? null
 }
@@ -232,7 +239,12 @@ async function statusText($: EngineInterface) {
   const held = await read($, pauseState)
   const state = (await read($, offState))
     ? t().stateOff
-    : t().stateOn(pct(limit), pct(reading.gap), pct(limit - reading.gap), untilText(maxWaitMs))
+    : t().stateOn(
+        pct(limit),
+        pct(reading.gap),
+        pct(limit - reading.gap - Math.max(0, ...reading.windows.map(w => blur(w.percent)))),
+        untilText(maxWaitMs),
+      )
   const now = held ? t().waitingNow(held.waiting, labelText(held.label), pct(held.percent)) : ''
   return `${state}${now}${t().stand(windows)}`
 }

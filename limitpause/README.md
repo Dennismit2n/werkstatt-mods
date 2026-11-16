@@ -9,6 +9,7 @@ Hält eine Modell-Anfrage der Hauptsitzung kurz an, wenn ein Limit die Grenze er
   - **Reset nah** (höchstens `maxWaitMinutes` entfernt, Standard 5 Minuten): Die Anfrage wartet an Ort und Stelle bis eine Minute nach dem Reset und geht dann unverändert raus. Toast, Statuszeile und Benachrichtigung melden Beginn und Ende.
   - **Reset fern oder unbekannt:** Die Runde wird beendet, die Anfrage nicht gesendet. Eine Log-Zeile im Verlauf, ein Toast und eine Benachrichtigung nennen Fenster, Stand und Freigabezeit, dazu den Weg weiter: nach dem Reset erneut senden, oder `/limitpause aus` und erneut senden.
 - Der Abstand ist das Doppelte des größten Anstiegs der letzten zehn Messungen, mindestens 0,5 und höchstens 2 Punkte; ein Reset leert die Liste.
+- Die Desktop-App nennt nur ganze Prozent: Hinter „99 %“ kann schon 99,9 % stecken. Bei einer ganzen Zahl kommt deshalb ein voller Punkt Unschärfe zum Abstand. Mit der Grenze 99,89 heißt das: Bei 99 % hält die Mod an, bei 98 % nur, wenn die letzten Anstiege groß waren.
 - Gewartet wird in Häppchen von 30 Sekunden über einen kleinen Kindprozess (node, sonst PowerShell, sonst sh), der jede Sekunde ein Lebenszeichen gibt. Zwischen zwei Lebenszeichen prüft die Mod Esc und `/limitpause aus`.
 - **Agenten** (Subagenten) laufen immer durch: Die Desktop-App beendet einen Agenten, dessen Anfrage länger als 600 Sekunden hängt. Erreicht ein Agent das Limit, scheitert nur seine Anfrage.
 

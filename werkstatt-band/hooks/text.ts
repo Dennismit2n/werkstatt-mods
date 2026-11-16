@@ -17,7 +17,9 @@ export const decimal = (n: number, digits: number) => {
   return lang === 'en' ? text : text.replace('.', ',')
 }
 export const pct = (n: number) => {
-  const text = String(Math.round(n * 10) / 10)
+  // Bis zwei Nachkommastellen, ohne Nullen am Ende (Dennis, 16.11.2026). Die
+  // App liefert derzeit nur ganze Prozent, dann bleibt es bei „99 %“.
+  const text = String(Math.round(n * 100) / 100)
   return lang === 'en' ? `${text}%` : `${text.replace('.', ',')} %`
 }
 export const money = (n: number) => decimal(n, 2)

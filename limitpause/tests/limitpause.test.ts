@@ -261,6 +261,10 @@ test('Abstand, Zusammenführen, Grenze und Wartezeit', () => {
   // Eine eigene Grenze zieht die Pause vor.
   expect(blocking(merged, 'claude-opus-5-5', 0.5, 90)?.label).toBe('5 h')
   expect(blocking([{ label: '5 h', percent: 80, resetsAt: 500 }], 'claude-opus-5-5', 0.5, 90)).toBe(null)
+  // Ganze Prozent der App: 99 % kann 99,9 % sein, also anhalten; 98 % mit kleinem Abstand nicht.
+  expect(blocking([{ label: 'Woche', percent: 99, resetsAt: 500 }], 'claude-opus-5-5', 0.5, 99.89)?.label).toBe('Woche')
+  expect(blocking([{ label: 'Woche', percent: 98, resetsAt: 500 }], 'claude-opus-5-5', 0.5, 99.89)).toBe(null)
+  expect(blocking([{ label: 'Woche', percent: 99.2, resetsAt: 500 }], 'claude-opus-5-5', 0.5, 99.89)).toBe(null)
 
   // Warten lohnt nur mit Reset-Zeitpunkt innerhalb der Wartezeit (plus eine Minute Puffer).
   const soon = { label: '5 h', percent: 99.5, resetsAt: 1_000_000 + 90_000 }
