@@ -31,10 +31,17 @@ let warnPoints = DEFAULT_WARN_POINTS
 let freeTurn: 'armed' | string | null = null
 
 // Schon gemeldet: je Fenster und Reset nur ein Hinweis, nicht vor jeder Anfrage.
+// Der Reset auf die Stunde gerundet: App und Engine nennen ihn leicht verschieden.
 const warned = new Set<string>()
 const rerouted = new Set<string>()
 let warnStatusShown = false
-const windowKey = (w: LimitWindow) => `${w.label}|${w.resetsAt ?? ''}`
+const windowKey = (w: LimitWindow) =>
+  `${w.label}|${w.resetsAt === null ? '' : Math.round(w.resetsAt / 3_600_000)}`
+
+// Die Wochenfenster einzelner Modelle („Woche Fable“) kennt nur die App. Fehlen
+// ihre Zahlen kurz (Freigabe, Fehler), gelten die zuletzt gelesenen weiter, bis
+// zu ihrem Reset; sonst sähe die Ausweiche ein volles Modell nicht mehr.
+let lastModelWindows: LimitWindow[] = []
 
 // Eine Anfrage kostet selbst etwas, und andere Sitzungen und Agenten zählen
 // zwischen zwei Messungen mit. Deshalb wird früher angehalten: um das Doppelte
@@ -121,9 +128,18 @@ export function blocking(windows: readonly LimitWindow[], model: string, gap: nu
 // Ein Wochenlimit nur eines Modells („Woche Fable“), nicht das allgemeine.
 export const isModelWindow = (label: string) => /^Woche \S/.test(label)
 
-// Modell-Ausweiche (Dennis, 16.11.2026): Ist nur das Wochenlimit des eigenen
-// Modells voll, geht die Anfrage mit dem Ausweichmodell raus, statt zu
-// stoppen. Nur wenn das Ausweichmodell selbst frei ist; sonst null.
+// Ob die Ausweiche für dieses Modell überhaupt in Frage kommt: Es gibt ein
+// Ausweichmodell, und es ist nicht dasselbe Modell.
+const canFallback = (model: string, fallback: string) => fallback !== '' && !appliesTo(`Woche ${fallback}`, model)
+
+// Das eigene Modell-Wochenfenster, das die Ausweiche abfängt.
+const isCaught = (w: LimitWindow, model: string, fallback: string) =>
+  isModelWindow(w.label) && appliesTo(w.label, model) && canFallback(model, fallback)
+
+// Modell-Ausweiche (Dennis, 16.11.2026): Ist das Wochenlimit des eigenen
+// Modells voll, geht die Anfrage mit dem Ausweichmodell raus. Das Ausweichmodell
+// unterliegt dann selbst der Pause (5 h, Woche, sein eigenes Wochenfenster);
+// die prüft der Aufrufer. null: beim eigenen Modell bleiben.
 export function reroute(
   windows: readonly LimitWindow[],
   model: string,
@@ -131,15 +147,14 @@ export function reroute(
   fallback: string,
   threshold = limit,
 ): string | null {
-  if (fallback === '' || appliesTo(`Woche ${fallback}`, model)) return null
-  const hit = blocking(windows, model, gap, threshold)
-  if (hit === null || !isModelWindow(hit.label) || appliesTo(hit.label, fallback)) return null
-  return blocking(windows, fallback, gap, threshold) === null ? fallback : null
+  if (!canFallback(model, fallback)) return null
+  const own = windows.filter(w => isCaught(w, model, fallback))
+  return blocking(own, model, gap, threshold) === null ? null : fallback
 }
 
 // Vorwarnung (Dennis, 16.11.2026): so viele Punkte vor der Grenze ein Hinweis,
-// die Übergabe jetzt zu schreiben. Ein Modell-Wochenlimit, das die Ausweiche
-// abfängt, warnt nicht: Dort wird ja nichts gestoppt.
+// die Übergabe jetzt zu schreiben. Das eigene Modell-Wochenfenster warnt nicht,
+// wenn die Ausweiche es abfängt: Dort wird ja nichts gestoppt.
 export function warning(
   windows: readonly LimitWindow[],
   model: string,
@@ -149,10 +164,8 @@ export function warning(
   threshold = limit,
 ) {
   if (points <= 0) return null
-  const caught = (w: LimitWindow) =>
-    isModelWindow(w.label) && fallback !== '' && blocking(windows, fallback, gap, threshold) === null
   return blocking(
-    windows.filter(w => !caught(w)),
+    windows.filter(w => !isCaught(w, model, fallback)),
     model,
     gap,
     threshold - points,
@@ -182,7 +195,9 @@ async function measure($: EngineInterface, isFresh: boolean) {
   const now = await $.clock.now()
   if (isFresh || appReading === null || now - appReading.at > APP_MAX_AGE_MS) {
     appReading = await readLimits($)
+    if (appReading.source === 'app') lastModelWindows = appReading.windows.filter(w => isModelWindow(w.label))
   }
+  const known = appReading.source === 'app' ? [] : lastModelWindows.filter(w => w.resetsAt === null || w.resetsAt > now)
 
   const usage = await $.session.usage()
   const engine = fromEngine(usage.rateLimits, null, now).windows.filter(
@@ -199,7 +214,12 @@ async function measure($: EngineInterface, isFresh: boolean) {
   }
   if (jumps.join() !== stored.join()) await update($, jumpsState, () => jumps)
 
-  return { now, windows: merge([appReading.windows, engine], now), gap: gapFor(Math.max(0, ...jumps)) }
+  return {
+    now,
+    windows: merge([appReading.windows, known, engine], now),
+    gap: gapFor(Math.max(0, ...jumps)),
+    hasApp: appReading.source === 'app' || known.length > 0,
+  }
 }
 
 async function check($: EngineInterface, model: string, isFresh: boolean) {
@@ -313,8 +333,9 @@ async function statusText($: EngineInterface) {
         untilText(maxWaitMs),
       )
   const now = held ? t().waitingNow(held.waiting, labelText(held.label), pct(held.percent)) : ''
-  const extras = t().extras(fallbackModel === '' ? null : modelName(fallbackModel), warnPoints, freeTurn !== null)
-  return `${state}${now}${extras}${t().stand(windows)}`
+  const extras = t().extras(fallbackModel === '' ? null : modelName(fallbackModel), warnPoints, freeTurn === 'armed')
+  const noApp = fallbackModel !== '' && !reading.hasApp ? t().noAppNumbers : ''
+  return `${state}${now}${extras}${noApp}${t().stand(windows)}`
 }
 
 export const register: Register = (on, options) => {
@@ -369,47 +390,73 @@ export const register: Register = (on, options) => {
     const isAgent = e.agentId !== undefined
     const isOff = await isReleased($)
 
-    // Freifahrt: Die erste Anfrage nach „/limitpause einmal“ bindet die Runde,
-    // alle ihre Schritte laufen durch; eine neue Runde macht die Pause wieder scharf.
+    // Freifahrt: Die erste neue Runde nach „/limitpause einmal“ (Schritt 0) wird
+    // gebunden, alle ihre Schritte laufen durch. Ein weiterer Schritt einer
+    // Runde, die beim Eintippen schon lief, bindet nichts (der Befehl ist
+    // immediate). Eine spätere Runde macht die Pause wieder scharf.
     let isFree = false
     if (!isAgent && freeTurn !== null) {
-      if (freeTurn === 'armed') {
+      if (freeTurn === 'armed' && e.index === 0) {
         freeTurn = e.turnId
         $.ui.toast(t().freeUsed)
       }
       if (freeTurn === e.turnId) isFree = true
-      else freeTurn = null
+      else if (freeTurn !== 'armed') freeTurn = null
+    }
+
+    // Die Warn-Statuszeile gehört nur zur scharfen Pause der Hauptsitzung.
+    const clearWarn = () => {
+      if (!warnStatusShown) return
+      $.ui.status(undefined)
+      warnStatusShown = false
     }
 
     // Ohne Ausweiche gibt es bei „aus“ oder Freifahrt nichts zu prüfen.
-    if ((isOff || isFree) && fallbackModel === '') return yield* next(e)
+    if ((isOff || isFree) && fallbackModel === '') {
+      if (!isAgent) clearWarn()
+      return yield* next(e)
+    }
 
     let reading = await check($, e.model, false)
 
-    // Modell-Ausweiche gilt immer, auch für Agenten und bei „aus“: Sie hält
-    // nichts an, sie lenkt nur um, bevor die harte Sperre des Modells greift.
-    const alt = reroute(reading.windows, e.model, reading.gap, fallbackModel)
-    if (alt !== null) {
-      const hit = blocking(reading.windows, e.model, reading.gap)
-      if (hit !== null && !rerouted.has(windowKey(hit))) {
-        rerouted.add(windowKey(hit))
-        const when = hit.resetsAt === null ? t().noResetKnown : t().freeIn(untilText(hit.resetsAt - reading.now))
-        const text = t().rerouted(labelText(hit.label), pct(hit.percent), modelName(alt), modelName(e.model), when)
-        $.ui.log(text)
-        $.ui.toast(text)
-        void $.ui.notify(text, { title: t().notifyTitle }).catch(() => undefined)
-      }
-      return yield* next({ ...e, model: alt })
+    // Modell-Ausweiche gilt immer, auch für Agenten und bei „aus“: Ist das
+    // Wochenlimit des eigenen Modells voll, geht es mit dem Ausweichmodell
+    // weiter. Für das gelten danach die Pause und ihre Grenzen wie sonst.
+    const noteReroute = (alt: string) => {
+      const own = blocking(
+        reading.windows.filter(w => isModelWindow(w.label) && appliesTo(w.label, e.model)),
+        e.model,
+        reading.gap,
+      )
+      if (own === null || rerouted.has(windowKey(own))) return
+      rerouted.add(windowKey(own))
+      const when = own.resetsAt === null ? t().noResetKnown : t().freeIn(untilText(own.resetsAt - reading.now))
+      const text = t().rerouted(labelText(own.label), pct(own.percent), modelName(alt), modelName(e.model), when)
+      $.ui.log(text)
+      $.ui.toast(text)
+      void $.ui.notify(text, { title: t().notifyTitle }).catch(() => undefined)
     }
+    const pickModel = () => {
+      const alt = reroute(reading.windows, e.model, reading.gap, fallbackModel)
+      if (alt !== null) noteReroute(alt)
+      return alt ?? e.model
+    }
+    let model = pickModel()
+    const send = () => next(model === e.model ? e : { ...e, model })
+    let hit = blocking(reading.windows, model, reading.gap)
 
     // Agenten werden nie angehalten: Die Desktop-App beendet einen Agenten,
     // dessen Anfrage länger als 600 s hängt („Agent stalled“, 02.11.2026).
     // Erreicht er das Limit, scheitert nur seine Anfrage, nicht die Sitzung.
-    if (isAgent || isOff || isFree) return yield* next(e)
+    if (isAgent) return yield* send()
+    if (isOff || isFree) {
+      clearWarn()
+      return yield* send()
+    }
 
     // Vorwarnung, einmal je Fenster und Reset; die Statuszeile bleibt, bis
-    // kein Fenster mehr in der Warnzone ist.
-    const near = reading.hit === null ? warning(reading.windows, e.model, reading.gap, warnPoints, fallbackModel) : null
+    // kein Fenster mehr in der Warnzone ist oder die Pause selbst greift.
+    const near = hit === null ? warning(reading.windows, model, reading.gap, warnPoints, fallbackModel) : null
     if (near !== null) {
       const text = t().warn(labelText(near.label), pct(near.percent))
       if (!warned.has(windowKey(near))) {
@@ -419,24 +466,22 @@ export const register: Register = (on, options) => {
       }
       $.ui.status(t().warnStatus(labelText(near.label), pct(near.percent)))
       warnStatusShown = true
-    } else if (warnStatusShown && reading.hit === null) {
-      $.ui.status(undefined)
-      warnStatusShown = false
+    } else {
+      clearWarn()
     }
 
-    if (reading.hit === null) return yield* next(e)
-    warnStatusShown = false
+    if (hit === null) return yield* send()
 
     const aborted = { turnId: e.turnId, index: e.index, answer: '', toolUses: [], stopReason: null, usage: null }
-    if (!canWait(reading.hit, reading.now)) {
-      await stop($, e.turnId, reading.hit, reading.now)
+    if (!canWait(hit, reading.now)) {
+      await stop($, e.turnId, hit, reading.now)
       return aborted
     }
 
-    await begin($, reading.hit, reading.now)
+    await begin($, hit, reading.now)
     let why: Why = 'reset'
     try {
-      while (reading.hit !== null && canWait(reading.hit, reading.now)) {
+      while (hit !== null && canWait(hit, reading.now)) {
         if (next.signal.aborted) {
           why = 'aborted'
           return aborted
@@ -445,7 +490,7 @@ export const register: Register = (on, options) => {
           why = 'off'
           break
         }
-        const due = dueAt(reading.hit) ?? reading.now
+        const due = dueAt(hit) ?? reading.now
         const woke = await nap($, due - reading.now, next.signal)
         if (woke === 'aborted') {
           why = 'aborted'
@@ -456,18 +501,26 @@ export const register: Register = (on, options) => {
           break
         }
         const now = await $.clock.now()
-        reading = now >= due ? await check($, e.model, true) : { ...reading, now }
+        if (now >= due) {
+          // Nach dem Reset neu messen und neu entscheiden, auch über die
+          // Ausweiche: Ist jetzt nur noch das eigene Modell voll, lenkt sie um.
+          reading = await check($, e.model, true)
+          model = pickModel()
+          hit = blocking(reading.windows, model, reading.gap)
+        } else {
+          reading = { ...reading, now }
+        }
       }
       // Nach dem Reset immer noch zu voll und kein naher Reset mehr: nicht weiter warten.
-      if (reading.hit !== null && why === 'reset') why = 'stopped'
+      if (hit !== null && why === 'reset') why = 'stopped'
     } finally {
       await end($, why)
     }
-    if (why === 'stopped' && reading.hit !== null) {
-      await stop($, e.turnId, reading.hit, reading.now)
+    if (why === 'stopped' && hit !== null) {
+      await stop($, e.turnId, hit, reading.now)
       return aborted
     }
 
-    return yield* next(e)
+    return yield* send()
   })
 }

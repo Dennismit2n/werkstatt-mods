@@ -70,6 +70,7 @@ const de = {
   stand: (windows: string) =>
     ` Stand: ${windows}. /limitpause einmal lässt die nächste Runde durch, /limitpause aus hält nichts mehr an, /limitpause an schaltet wieder ein.`,
   noNumbers: 'keine Zahlen',
+  noAppNumbers: ' Ohne die Zahlen der App (get_usage nicht freigegeben?) sieht die Ausweiche kein volles Modell-Wochenlimit.',
 }
 
 const en: typeof de = {
@@ -104,6 +105,7 @@ const en: typeof de = {
   stand: (windows: string) =>
     ` Now: ${windows}. /limitpause once lets the next turn through, /limitpause off stops holding anything, /limitpause on turns it back on.`,
   noNumbers: 'no numbers',
+  noAppNumbers: ' Without the app’s numbers (get_usage not allowed?) the fallback cannot see a full model weekly limit.',
 }
 
 export const t = () => (lang === 'en' ? en : de)

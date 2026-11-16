@@ -1,6 +1,6 @@
 {
   "name": "limitpause",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Hält eine Anfrage der Hauptsitzung kurz an, wenn ein Limit die Grenze (99,89 %) erreichen würde und der Reset nah ist; liegt er fern, stoppt sie die Runde mit Hinweis. Ist nur ein Modell-Wochenlimit voll, geht es mit Opus weiter. Vorwarnung für die Übergabe, Freifahrt mit /limitpause einmal. Agenten laufen immer durch.",
   "author": {
     "name": "Dennis Ulmer",

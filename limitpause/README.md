@@ -8,7 +8,7 @@ Hält eine Modell-Anfrage der Hauptsitzung kurz an, wenn ein Limit die Grenze er
 - Würde ein Fenster mit Sicherheitsabstand die Grenze erreichen, gibt es zwei Fälle:
   - **Reset nah** (höchstens `maxWaitMinutes` entfernt, Standard 5 Minuten): Die Anfrage wartet an Ort und Stelle bis eine Minute nach dem Reset und geht dann unverändert raus. Toast, Statuszeile und Benachrichtigung melden Beginn und Ende.
   - **Reset fern oder unbekannt:** Die Runde wird beendet, die Anfrage nicht gesendet. Eine Log-Zeile im Verlauf, ein Toast und eine Benachrichtigung nennen Fenster, Stand und Freigabezeit, dazu den Weg weiter: nach dem Reset erneut senden, mit `/limitpause einmal` eine Runde durchlassen (etwa für `/uebergabe`) oder mit `/limitpause aus` die Pause ganz aufheben.
-- **Modell-Ausweiche:** Ist nur das Wochenlimit des eigenen Modells voll und das Ausweichmodell (`fallbackModel`, Standard Opus) frei, geht die Anfrage mit dem Ausweichmodell raus. Das gilt auch für Agenten und bei `/limitpause aus`, denn es hält nichts an, es lenkt nur um. Ein Hinweis im Verlauf, als Toast und als Benachrichtigung kommt einmal je Fenster und Reset.
+- **Modell-Ausweiche:** Ist das Wochenlimit des eigenen Modells voll, geht die Anfrage mit dem Ausweichmodell (`fallbackModel`, Standard Opus) raus. Für das Ausweichmodell gilt danach die Pause wie sonst (5 h, Woche, sein eigenes Wochenlimit); nach einem Warten entscheidet die Mod neu. Das Wochenlimit je Modell kennt nur die App (`get_usage`, braucht eine Freigabe in `permissions.allow`); fehlen ihre Zahlen kurz, gelten die zuletzt gelesenen bis zum Reset weiter. Das gilt auch für Agenten und bei `/limitpause aus`, denn es hält nichts an, es lenkt nur um. Ein Hinweis im Verlauf, als Toast und als Benachrichtigung kommt einmal je Fenster und Reset.
 - **Vorwarnung:** `warnPoints` Punkte vor der Grenze (Standard 3, mit der Unschärfe also ab etwa 96 %) kommen einmal ein Toast und eine Benachrichtigung, die Statuszeile bleibt stehen: jetzt `/uebergabe` schreiben, solange der Rest sicher reicht. Ein Modell-Fenster, das die Ausweiche abfängt, warnt nicht.
 - Der Abstand ist das Doppelte des größten Anstiegs der letzten zehn Messungen, mindestens 0,5 und höchstens 2 Punkte; ein Reset leert die Liste.
 - Die Desktop-App nennt nur ganze Prozent: Hinter „99 %“ kann schon 99,9 % stecken. Bei einer ganzen Zahl kommt deshalb ein voller Punkt Unschärfe zum Abstand. Mit der Grenze 99,89 heißt das: Bei 99 % hält die Mod an, bei 98 % nur, wenn die letzten Anstiege groß waren.
@@ -57,6 +57,6 @@ Zum Entwickeln aus einem Ordner: `claude --plugin-dir <Pfad zu limitpause>`, ode
 
 ## Prüfen
 
-`claude plugin validate <Ordner>` und `claude plugin test <Ordner>` (22 Tests). `hooks/limits.ts` liegt gleichlautend auch in den Mods `statistik` und `werkstatt-band`; beim Ändern alle drei Kopien gleich halten.
+`claude plugin validate <Ordner>` und `claude plugin test <Ordner>` (25 Tests). `hooks/limits.ts` liegt gleichlautend auch in den Mods `statistik` und `werkstatt-band`; beim Ändern alle drei Kopien gleich halten.
 
 Lizenz: MIT.

@@ -20,6 +20,7 @@ function engine(on: On, fiveHour: number, resetsInMs: number | null, app?: unkno
     naps: 0,
     aborts: 0,
     toasts: [] as string[],
+    statuses: [] as (string | undefined)[],
     logs: [] as string[],
     registered: null as unknown,
     // Hält den Schläfer an, bis der Test ihn weiterlaufen lässt.
@@ -59,7 +60,10 @@ function engine(on: On, fiveHour: number, resetsInMs: number | null, app?: unkno
     seen.logs.push(String((e as { text?: unknown }).text ?? JSON.stringify(e)))
     return { value: undefined } as never
   })
-  on('ui.status', () => ({ value: undefined }) as never)
+  on('ui.status', (_, e) => {
+    seen.statuses.push((e as { text?: string }).text)
+    return { value: undefined } as never
+  })
   on('ui.notify', () => ({ value: { isSent: false, reason: 'no-surface' } }) as never)
   on('turn.abort', () => {
     seen.aborts += 1
@@ -324,13 +328,14 @@ test('eigene Grenze: mit 90 % hält schon 89,8 % an', { options: { limitPercent:
 })
 
 // Die Zahlen der App: ganze Prozent, dazu das Wochenlimit eines Modells.
-function appUsage(fable: number, week = 40) {
+function appUsage(fable: number, week = 40, fiveHour = 10, fiveHourResetMs = 3 * 86_400_000) {
   const soon = new Date(1_000_000 + 3 * 86_400_000).toISOString()
+  const fiveReset = new Date(1_000_000 + fiveHourResetMs).toISOString()
   return {
     plan: {
       status: 'ok',
       windows: [
-        { label: '5-hour limit', percentUsed: 10, resetsAt: soon },
+        { label: '5-hour limit', percentUsed: fiveHour, resetsAt: fiveReset },
         { label: 'Weekly · all models', percentUsed: week, resetsAt: soon },
         { label: 'Weekly · Fable', percentUsed: fable, resetsAt: soon },
       ],
@@ -348,8 +353,9 @@ test('Ausweiche, Vorwarnung und Name: reine Rechnung', () => {
   expect(reroute(full, 'claude-fable-5-2', 0.5, 'opus', 99.89)).toBe('opus')
   expect(reroute(full, 'claude-opus-5-5', 0.5, 'opus', 99.89)).toBe(null)
   expect(reroute(full, 'claude-fable-5-2', 0.5, '', 99.89)).toBe(null)
-  // Ist auch die allgemeine Woche voll, hilft kein anderes Modell.
-  expect(reroute([...full, { label: 'Woche', percent: 99, resetsAt: 500 }], 'claude-fable-5-2', 0.5, 'opus', 99.89)).toBe(null)
+  // Die Ausweiche entscheidet nur das Modell; ist zusätzlich die allgemeine
+  // Woche voll, greift danach für Opus die Pause wie sonst.
+  expect(reroute([...full, { label: 'Woche', percent: 99, resetsAt: 500 }], 'claude-fable-5-2', 0.5, 'opus', 99.89)).toBe('opus')
   // Die 5 h voll: kein Modell-Fenster, also keine Ausweiche.
   expect(reroute([{ label: '5 h', percent: 99, resetsAt: 500 }], 'claude-fable-5-2', 0.5, 'opus', 99.89)).toBe(null)
 
@@ -427,4 +433,38 @@ test('Kontext genau aus den Tokens, sonst die ganze Zahl', () => {
   expect(exactContext(undefined, 1_000_000, 14)).toBe(14)
   expect(exactContext(5, 0, 7)).toBe(7)
   expect(exactContext(undefined, undefined, undefined)).toBe(null)
+})
+
+test('Freifahrt bindet nur eine neue Runde, nicht den nächsten Schritt einer laufenden', async ($, on) => {
+  const seen = engine(on, 99.5, 3_600_000)
+
+  await $.command.run({ command: 'limitpause', args: 'einmal' } as never)
+  // Schritt 1 der Runde, die beim Eintippen lief: gestoppt, Freifahrt bleibt bereit.
+  const running = $.turn.step({ ...STEP, turnId: 'laufend', index: 1 })
+  let piece = await running.next()
+  while (!piece.done) piece = await running.next()
+  expect(piece.value.answer).toBe('')
+  // Die nächste Runde (Schritt 0) ist frei.
+  expect((await step($, STEP.model, undefined, 'uebergabe')).answer).toBe('ok')
+  expect(seen.requests).toBe(1)
+})
+
+test('Vorwarnung: die Statuszeile verschwindet, wenn danach gestoppt wird', async ($, on) => {
+  const seen = engine(on, 97, 3_600_000)
+
+  await step($)
+  expect(seen.statuses.at(-1)).toContain('Limit naht')
+  seen.fiveHour = 99.5
+  expect((await step($, STEP.model, undefined, 'zwei')).answer).toBe('')
+  expect(seen.statuses.at(-1)).toBe(undefined)
+})
+
+test('Fable-Woche voll und 5 h kurz vor dem Reset: warten, dann mit Opus', async ($, on) => {
+  const seen = engine(on, 10, 3_600_000, appUsage(100, 40, 99, 90_000))
+
+  const result = await step($, 'claude-fable-5-2')
+
+  expect(result.answer).toBe('ok')
+  expect(seen.models).toEqual(['opus'])
+  expect(seen.aborts).toBe(0)
 })
