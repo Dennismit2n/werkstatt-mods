@@ -22,9 +22,9 @@ Die Mods arbeiten einzeln. Zusammen greifen sie ineinander: Die Knöpfe „Stati
 
 ## So sehen sie aus
 
-<p><img src="docs/werkstatt-band.png" alt="Das Werkstatt-Band über dem Eingabefeld: 5-Stunden-Fenster, Woche, Woche je Modell, Guthaben und Kontext in einer Zeile, dazu die Knöpfe Statistik und Agenten" width="690"></p>
+<p><img src="docs/werkstatt-band.png" alt="Das Werkstatt-Band über dem Eingabefeld: 5 Stunden 93,0 %, Woche 55,0 %, Woche Fable 100,0 % und Kontext 57,56 % in einer Zeile, je mit kleinem Balken" width="690"></p>
 
-<p><img src="docs/statistik.png" alt="Die Seitenleiste Statistik: Sitzungen, Nachrichten und Token der letzten Tage, ein Kalender mit der Nutzung je Tag, darunter die Limits und das Zählwerk" width="380"> <img src="docs/flugdeck.png" alt="Die Seitenleiste Agenten: sechs Subagenten einer Sitzung mit Laufbalken und Dauer, einer davon aufgeklappt mit Modell, Zahl der Werkzeuge und Anfragen, Token und letztem Werkzeug" width="400"></p>
+<p><img src="docs/statistik.png" alt="Die Seitenleiste Statistik: Sitzungen, Nachrichten und Token, ein Kalender mit der Nutzung je Tag, darunter die Limits mit einer Nachkommastelle" width="380"> <img src="docs/flugdeck.png" alt="Die Seitenleiste Agenten: sechs Subagenten einer Sitzung mit Laufbalken und Dauer, einer davon aufgeklappt mit Modell, Zahl der Werkzeuge und Anfragen, Token und letztem Werkzeug" width="400"></p>
 
 <p><img src="docs/waechter.png" alt="Meldung des Wächters: Der Befehl hat 9.816 Zeichen, erlaubt sind 7.500, Windows kappt ab etwa 8.000 still, den Inhalt erst mit Write als Datei anlegen und dann ausführen" width="655"></p>
 
@@ -33,6 +33,8 @@ Die Mods arbeiten einzeln. Zusammen greifen sie ineinander: Die Knöpfe „Stati
 <p><img src="docs/uebergabe.png" alt="Das Band der Mod uebergabe: Übergabe liegt bereit, daneben die Knöpfe Neue Sitzung starten, Pfad kopieren und Schließen" width="690"></p>
 
 <p><img src="docs/ampel.png" alt="Die Ampel über dem Eingabefeld: kleines Gehäuse mit Schrauben, rote und grüne Lampe leuchten, daneben Alles steht, nichts läuft, darunter rot 01:05 Zug abgebrochen (Esc oder Stopp) und der Knopf Gesehen" width="670"></p>
+
+<p><img src="docs/registerkarten.png" alt="Die Seitenleiste im Code-Tab mit farbigen Punkten vor den Abschnitten: grün für Windows-Programme, blau für Web, lila für Claude und Mods, rot für Anleitungen, orange für Spiele; private Namen sind von Hand geschwärzt" width="320"></p>
 
 <p><img src="docs/sichtschutz.png" alt="Der Sichtschutz im Verlauf: In einer Zeile sind Mailadresse, Betrag und Telefonnummer durch gedämpfte Balken ersetzt" width="690"></p>
 
