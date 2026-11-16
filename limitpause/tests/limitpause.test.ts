@@ -4,6 +4,7 @@ import type { On } from 'claude-code'
 
 import { appliesTo, blocking, canWait, gapFor, merge, modelName, noteJump, reroute, warning } from '../hooks/register'
 import { pct } from '../hooks/text'
+import { exactContext } from '../hooks/limits'
 
 const STEP = { turnId: 't1', index: 0, model: 'claude-opus-5-5', messageCount: 3 }
 
@@ -419,4 +420,11 @@ test('Prozent: mindestens eine, höchstens zwei Nachkommastellen', () => {
   expect(pct(99.2)).toBe('99,2 %')
   expect(pct(99.261)).toBe('99,26 %')
   expect(pct(0)).toBe('0,0 %')
+})
+
+test('Kontext genau aus den Tokens, sonst die ganze Zahl', () => {
+  expect(exactContext(136_840, 1_000_000, 14)).toBe(13.68)
+  expect(exactContext(undefined, 1_000_000, 14)).toBe(14)
+  expect(exactContext(5, 0, 7)).toBe(7)
+  expect(exactContext(undefined, undefined, undefined)).toBe(null)
 })

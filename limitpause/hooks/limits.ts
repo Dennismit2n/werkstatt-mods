@@ -13,6 +13,16 @@ const USAGE_TOOL = 'mcp__ccd_session_mgmt__get_usage'
 
 const num = (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? value : null)
 
+// Kontext genau aus den Tokens statt der ganzen Prozentzahl (Dennis, 16.11.2026:
+// „überall ,0“). 5 h und Woche liefert Anthropic nur ganzzahlig, der Kontext
+// lässt sich aus Tokens und Fenstergröße aber auf zwei Stellen rechnen.
+export function exactContext(tokens: unknown, window: unknown, percent: unknown): number | null {
+  const used = num(tokens)
+  const size = num(window)
+  if (used !== null && size !== null && size > 0) return Math.round((used / size) * 10_000) / 100
+  return num(percent)
+}
+
 function time(value: unknown) {
   const parsed = typeof value === 'string' ? Date.parse(value) : NaN
   return Number.isNaN(parsed) ? null : parsed
@@ -57,7 +67,7 @@ export function parseAppUsage(raw: unknown, now: number): Limits | null {
   return {
     windows,
     credit,
-    context: context?.status === 'ok' ? num(context.percentUsed) : null,
+    context: context?.status === 'ok' ? exactContext(context.tokensUsed, context.contextWindow, context.percentUsed) : null,
     compactsAt: num(context?.autoCompactsAtPercent),
     source: 'app',
     at: now,
@@ -110,5 +120,5 @@ export async function readLimits($: EngineInterface): Promise<Limits> {
     // Kein App-Werkzeug (Terminal, -p): weiter mit den Zahlen der Engine.
   }
   const usage = await $.session.usage()
-  return fromEngine(usage.rateLimits, usage.context.percent ?? null, now)
+  return fromEngine(usage.rateLimits, exactContext(usage.context.tokens, usage.context.window, usage.context.percent), now)
 }

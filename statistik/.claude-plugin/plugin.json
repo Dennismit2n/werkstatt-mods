@@ -1,6 +1,6 @@
 {
   "name": "statistik",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Nutzungsstatistik, Limits und Zählwerk (Sitzungen, Nachrichten, Token, Kalender) als Seitenleiste neben dem Chat",
   "author": {
     "name": "Dennis Ulmer",
