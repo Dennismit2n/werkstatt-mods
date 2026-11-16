@@ -80,7 +80,7 @@ test('verlangt das App-Werkzeug eine Freigabe, ruft der Mod es nicht auf', async
   const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
   expect(usageCalls).toEqual([])
   expect(await ui.find({ type: 'Text', text: /^Woche Fable$/ })).toBeUndefined()
-  expect((await ui.find({ type: 'Text', text: /^37 %$/ }))?.text).toBe('37 %')
+  expect((await ui.find({ type: 'Text', text: /^37,0 %$/ }))?.text).toBe('37,0 %')
   await ui.unmount()
 })
 
@@ -94,10 +94,10 @@ test('mit der App: 5 h, Woche, Woche Fable und Kontext; ausgeschaltetes Guthaben
     expect((await ui.find({ type: 'Text', text: /^5 h$/ }))?.text).toBe('5 h')
     expect((await ui.find({ type: 'Text', text: /^Woche$/ }))?.text).toBe('Woche')
     expect((await ui.find({ type: 'Text', text: /^Woche Fable$/ }))?.text).toBe('Woche Fable')
-    expect((await ui.find({ type: 'Text', text: /^12 %$/ }))?.text).toBe('12 %')
-    expect((await ui.find({ type: 'Text', text: /^0 %$/ }))?.text).toBe('0 %')
+    expect((await ui.find({ type: 'Text', text: /^12,0 %$/ }))?.text).toBe('12,0 %')
+    expect((await ui.find({ type: 'Text', text: /^0,0 %$/ }))?.text).toBe('0,0 %')
     expect(await ui.find({ type: 'Text', text: /^Guthaben$/ })).toBeUndefined()
-    expect((await ui.find({ type: 'Text', text: /^50 %$/ }))?.text).toBe('50 %')
+    expect((await ui.find({ type: 'Text', text: /^50,0 %$/ }))?.text).toBe('50,0 %')
     await ui.unmount()
   }
 })
@@ -107,7 +107,7 @@ test('mit der App und eingeschaltetem Guthaben: Anteil und Betrag', async ($, on
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
 
   const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
-  expect((await ui.find({ type: 'Text', text: /^25 %$/ }))?.text).toBe('25 %')
+  expect((await ui.find({ type: 'Text', text: /^25,0 %$/ }))?.text).toBe('25,0 %')
   expect((await ui.find({ type: 'Text', text: /1,25/ }))?.text).toBe('· 1,25 von 5,00 USD')
   await ui.unmount()
 })
@@ -119,9 +119,9 @@ test('das Band zeigt 5 h, Woche und Kontext auf jeder Oberfläche', async ($, on
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...BAND, surface })
 
-    expect((await ui.find({ type: 'Text', text: /^37 %$/ }))?.text).toBe('37 %')
+    expect((await ui.find({ type: 'Text', text: /^37,0 %$/ }))?.text).toBe('37,0 %')
     expect((await ui.find({ type: 'Text', text: /^91,5 %$/ }))?.text).toBe('91,5 %')
-    expect((await ui.find({ type: 'Text', text: /^42 %$/ }))?.text).toBe('42 %')
+    expect((await ui.find({ type: 'Text', text: /^42,0 %$/ }))?.text).toBe('42,0 %')
     expect((await ui.find({ type: 'Text', text: /2:13 h/ }))?.text).toBe('(2:13 h)')
     expect((await ui.find({ type: 'Text', text: /3 T/ }))?.text).toBe('(3 T 4 h)')
     await ui.unmount()
@@ -136,7 +136,7 @@ test('Limits klappt das Band ein, die Knöpfe bleiben, /limits klappt es wieder 
     const ui = await $.ui.mount({ ...BAND, surface })
     expect(await ui.find({ key: 'statistik' })).toBeDefined()
     await ui.press({ key: 'toggle-band' })
-    expect(await ui.find({ type: 'Text', text: /^37 %$/ })).toBeUndefined()
+    expect(await ui.find({ type: 'Text', text: /^37,0 %$/ })).toBeUndefined()
     expect(await ui.find({ key: 'statistik' })).toBeDefined()
     expect(await ui.find({ key: 'toggle-band' })).toBeDefined()
     await ui.unmount()
@@ -144,7 +144,7 @@ test('Limits klappt das Band ein, die Knöpfe bleiben, /limits klappt es wieder 
     // origin und presentation setzt sonst die Engine; der Mod liest sie nicht.
     await $.command.run({ command: 'limits', args: '' } as Parameters<typeof $.command.run>[0])
     const again = await $.ui.mount({ ...BAND, surface })
-    expect((await again.find({ type: 'Text', text: /^37 %$/ }))?.text).toBe('37 %')
+    expect((await again.find({ type: 'Text', text: /^37,0 %$/ }))?.text).toBe('37,0 %')
     await again.unmount()
   }
 })
@@ -155,10 +155,10 @@ test('was andere Mods und die Engine im Band zeichnen, bleibt unter dem Band ste
 
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...BAND, surface })
-    expect((await ui.find({ type: 'Text', text: /^37 %$/ }))?.text).toBe('37 %')
+    expect((await ui.find({ type: 'Text', text: /^37,0 %$/ }))?.text).toBe('37,0 %')
     expect((await ui.find({ type: 'Text', text: /^unten$/ }))?.text).toBe('unten')
     await ui.press({ key: 'toggle-band' })
-    expect(await ui.find({ type: 'Text', text: /^37 %$/ })).toBeUndefined()
+    expect(await ui.find({ type: 'Text', text: /^37,0 %$/ })).toBeUndefined()
     expect((await ui.find({ type: 'Text', text: /^unten$/ }))?.text).toBe('unten')
     await ui.unmount()
     await $.command.run({ command: 'limits', args: '' } as Parameters<typeof $.command.run>[0])
@@ -212,7 +212,7 @@ test('auf Englisch: Fenster, Prozent, Knöpfe, News und Textprüfer', { options:
 
   const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
   expect((await ui.find({ type: 'Text', text: /^Week Fable$/ }))?.text).toBe('Week Fable')
-  expect((await ui.find({ type: 'Text', text: /^12%$/ }))?.text).toBe('12%')
+  expect((await ui.find({ type: 'Text', text: /^12.0%$/ }))?.text).toBe('12.0%')
   expect((await ui.find({ type: 'Text', text: /^Statistics$/ }))?.text).toBe('Statistics')
   expect((await ui.find({ type: 'Text', text: /Changed/ }))?.text).toBe('Changed: Spectroton.')
   expect((await ui.find({ type: 'Text', text: /news\.js/ }))?.text).toBe('Add a line to news.js?')

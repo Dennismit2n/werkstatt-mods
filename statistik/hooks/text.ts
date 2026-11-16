@@ -33,8 +33,10 @@ export function compact(n: number) {
   return int(n)
 }
 export const pct = (n: number) => {
-  // Bis zwei Nachkommastellen, ohne Nullen am Ende (Dennis, 16.11.2026).
-  const text = String(Math.round(n * 100) / 100)
+  // Mindestens eine, höchstens zwei Nachkommastellen (Dennis, 16.11.2026):
+  // 74 → „74,0 %“, 99,2 → „99,2 %“, 99,261 → „99,26 %“.
+  const fixed = n.toFixed(2)
+  const text = fixed.endsWith('0') ? fixed.slice(0, -1) : fixed
   return lang === 'en' ? `${text}%` : `${text.replace('.', ',')} %`
 }
 export const money = (n: number) => decimal(n, 2)

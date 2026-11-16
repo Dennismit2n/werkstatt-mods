@@ -154,8 +154,8 @@ test('Limits aus der App: alle fünf Anzeigen, der Teil klappt ein', async ($, o
     expect((await ui.find({ type: 'Text', text: /^Woche Fable$/ }))?.text).toBe('Woche Fable')
     expect((await ui.find({ type: 'Text', text: /^Nutzungsguthaben$/ }))?.text).toBe('Nutzungsguthaben')
     expect((await ui.find({ type: 'Text', text: /^aus$/ }))?.text).toBe('aus')
-    expect((await ui.find({ type: 'Text', text: /^12 %$/ }))?.text).toBe('12 %')
-    expect((await ui.find({ type: 'Text', text: /^50 %$/ }))?.text).toBe('50 %')
+    expect((await ui.find({ type: 'Text', text: /^12,0 %$/ }))?.text).toBe('12,0 %')
+    expect((await ui.find({ type: 'Text', text: /^50,0 %$/ }))?.text).toBe('50,0 %')
     expect((await ui.find({ type: 'Text', text: /fasst bei 97 %/ }))?.text).toBe('fasst bei 97 % zusammen')
 
     await ui.press({ key: 'toggle-limits' })

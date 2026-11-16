@@ -412,3 +412,11 @@ test('Vorwarnung: kurz vor der Grenze ein Hinweis auf /uebergabe, nur einmal, di
   expect(seen.toasts.filter(t => t.includes('Limit naht')).length).toBe(1)
   expect(seen.toasts[0]).toContain('/uebergabe')
 })
+
+test('Prozent: mindestens eine, höchstens zwei Nachkommastellen', async () => {
+  const { pct } = await import('../hooks/text')
+  expect(pct(74)).toBe('74,0 %')
+  expect(pct(99.2)).toBe('99,2 %')
+  expect(pct(99.261)).toBe('99,26 %')
+  expect(pct(0)).toBe('0,0 %')
+})

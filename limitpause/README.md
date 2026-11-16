@@ -57,6 +57,6 @@ Zum Entwickeln aus einem Ordner: `claude --plugin-dir <Pfad zu limitpause>`, ode
 
 ## Prüfen
 
-`claude plugin validate <Ordner>` und `claude plugin test <Ordner>` (20 Tests). `hooks/limits.ts` liegt gleichlautend auch in den Mods `statistik` und `werkstatt-band`; beim Ändern alle drei Kopien gleich halten.
+`claude plugin validate <Ordner>` und `claude plugin test <Ordner>` (21 Tests). `hooks/limits.ts` liegt gleichlautend auch in den Mods `statistik` und `werkstatt-band`; beim Ändern alle drei Kopien gleich halten.
 
 Lizenz: MIT.

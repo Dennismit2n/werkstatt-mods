@@ -12,9 +12,12 @@ export function setLanguage(value: unknown): Lang {
 
 export const language = () => lang
 
-// Prozent mit zwei Nachkommastellen: 99,89 % / 99.89%.
+// Prozent mit einer bis zwei Nachkommastellen: 99,0 % / 99,89 % / 99.89%.
 export const pct = (n: number) => {
-  const text = String(Math.round(n * 100) / 100)
+  // Mindestens eine, höchstens zwei Nachkommastellen (Dennis, 16.11.2026):
+  // 74 → „74,0 %“, 99,2 → „99,2 %“, 99,261 → „99,26 %“.
+  const fixed = n.toFixed(2)
+  const text = fixed.endsWith('0') ? fixed.slice(0, -1) : fixed
   return lang === 'en' ? `${text}%` : `${text.replace('.', ',')} %`
 }
 
