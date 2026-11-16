@@ -1,7 +1,7 @@
 {
   "name": "limitpause",
-  "version": "0.3.2",
-  "description": "Hält eine Anfrage der Hauptsitzung kurz an, wenn ein Limit die Grenze (99,89 %) erreichen würde und der Reset nah ist; liegt er fern, stoppt sie die Runde mit Hinweis, statt stundenlang zu warten. Agenten laufen immer durch.",
+  "version": "0.4.0",
+  "description": "Hält eine Anfrage der Hauptsitzung kurz an, wenn ein Limit die Grenze (99,89 %) erreichen würde und der Reset nah ist; liegt er fern, stoppt sie die Runde mit Hinweis. Ist nur ein Modell-Wochenlimit voll, geht es mit Opus weiter. Vorwarnung für die Übergabe, Freifahrt mit /limitpause einmal. Agenten laufen immer durch.",
   "author": {
     "name": "Dennis Ulmer",
     "url": "https://github.com/Dennismit2n"
@@ -31,6 +31,20 @@
       "default": 5,
       "min": 0,
       "max": 720
+    },
+    "fallbackModel": {
+      "type": "string",
+      "title": "Ausweichmodell / Fallback model",
+      "description": "Ist nur das Wochenlimit des eigenen Modells voll (z. B. Woche Fable), laufen Anfragen und Agenten mit diesem Modell weiter. Leer heißt aus. / If only the current model's weekly limit is full (e.g. Week Fable), requests and agents continue on this model. Empty means off.",
+      "default": "opus"
+    },
+    "warnPoints": {
+      "type": "number",
+      "title": "Vorwarnung in Punkten / Warning in points",
+      "description": "So viele Prozentpunkte vor der Grenze erinnert ein Hinweis daran, jetzt die Übergabe zu schreiben. 0 heißt aus. / This many points before the threshold a note reminds you to write the handover now. 0 means off.",
+      "default": 3,
+      "min": 0,
+      "max": 30
     }
   }
 }

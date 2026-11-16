@@ -17,6 +17,25 @@ let limit = DEFAULT_LIMIT
 export const DEFAULT_MAX_WAIT_MIN = 5
 let maxWaitMs = DEFAULT_MAX_WAIT_MIN * 60_000
 
+// Ausweichmodell, wenn nur das Wochenlimit des eigenen Modells voll ist
+// (Einstellung fallbackModel; leer heißt aus). Vorwarnung so viele Punkte vor
+// der Grenze (Einstellung warnPoints; 0 heißt aus).
+export const DEFAULT_FALLBACK = 'opus'
+let fallbackModel = DEFAULT_FALLBACK
+export const DEFAULT_WARN_POINTS = 3
+let warnPoints = DEFAULT_WARN_POINTS
+
+// Freifahrt: „/limitpause einmal“ lässt genau die nächste Runde der
+// Hauptsitzung durch, etwa für /uebergabe; danach ist die Pause wieder scharf.
+// 'armed' bis zur ersten Anfrage, dann die turnId dieser Runde.
+let freeTurn: 'armed' | string | null = null
+
+// Schon gemeldet: je Fenster und Reset nur ein Hinweis, nicht vor jeder Anfrage.
+const warned = new Set<string>()
+const rerouted = new Set<string>()
+let warnStatusShown = false
+const windowKey = (w: LimitWindow) => `${w.label}|${w.resetsAt ?? ''}`
+
 // Eine Anfrage kostet selbst etwas, und andere Sitzungen und Agenten zählen
 // zwischen zwei Messungen mit. Deshalb wird früher angehalten: um das Doppelte
 // des größten Sprungs der letzten zehn Anstiege, mindestens einen halben Punkt,
@@ -97,6 +116,54 @@ export function blocking(windows: readonly LimitWindow[], model: string, gap: nu
     .filter(w => appliesTo(w.label, model) && w.percent + gap + blur(w.percent) >= threshold)
     .sort((a, b) => b.percent - a.percent)
   return hit[0] ?? null
+}
+
+// Ein Wochenlimit nur eines Modells („Woche Fable“), nicht das allgemeine.
+export const isModelWindow = (label: string) => /^Woche \S/.test(label)
+
+// Modell-Ausweiche (Dennis, 16.11.2026): Ist nur das Wochenlimit des eigenen
+// Modells voll, geht die Anfrage mit dem Ausweichmodell raus, statt zu
+// stoppen. Nur wenn das Ausweichmodell selbst frei ist; sonst null.
+export function reroute(
+  windows: readonly LimitWindow[],
+  model: string,
+  gap: number,
+  fallback: string,
+  threshold = limit,
+): string | null {
+  if (fallback === '' || appliesTo(`Woche ${fallback}`, model)) return null
+  const hit = blocking(windows, model, gap, threshold)
+  if (hit === null || !isModelWindow(hit.label) || appliesTo(hit.label, fallback)) return null
+  return blocking(windows, fallback, gap, threshold) === null ? fallback : null
+}
+
+// Vorwarnung (Dennis, 16.11.2026): so viele Punkte vor der Grenze ein Hinweis,
+// die Übergabe jetzt zu schreiben. Ein Modell-Wochenlimit, das die Ausweiche
+// abfängt, warnt nicht: Dort wird ja nichts gestoppt.
+export function warning(
+  windows: readonly LimitWindow[],
+  model: string,
+  gap: number,
+  points: number,
+  fallback: string,
+  threshold = limit,
+) {
+  if (points <= 0) return null
+  const caught = (w: LimitWindow) =>
+    isModelWindow(w.label) && fallback !== '' && blocking(windows, fallback, gap, threshold) === null
+  return blocking(
+    windows.filter(w => !caught(w)),
+    model,
+    gap,
+    threshold - points,
+  )
+}
+
+// Name fürs Auge: „opus“ → „Opus“, „claude-fable-5-2“ → „Fable“.
+export function modelName(model: string) {
+  const known = model.toLowerCase().match(/(fable|opus|sonnet|haiku)/)
+  const word = known?.[1] ?? model
+  return word.charAt(0).toUpperCase() + word.slice(1)
 }
 
 // Wann die Anfrage frühestens raus darf: eine Minute nach dem Reset; null,
@@ -246,7 +313,8 @@ async function statusText($: EngineInterface) {
         untilText(maxWaitMs),
       )
   const now = held ? t().waitingNow(held.waiting, labelText(held.label), pct(held.percent)) : ''
-  return `${state}${now}${t().stand(windows)}`
+  const extras = t().extras(fallbackModel === '' ? null : modelName(fallbackModel), warnPoints, freeTurn !== null)
+  return `${state}${now}${extras}${t().stand(windows)}`
 }
 
 export const register: Register = (on, options) => {
@@ -256,6 +324,9 @@ export const register: Register = (on, options) => {
     typeof options.maxWaitMinutes === 'number' && options.maxWaitMinutes >= 0
       ? options.maxWaitMinutes * 60_000
       : DEFAULT_MAX_WAIT_MIN * 60_000
+  fallbackModel = typeof options.fallbackModel === 'string' ? options.fallbackModel.trim() : DEFAULT_FALLBACK
+  warnPoints =
+    typeof options.warnPoints === 'number' && options.warnPoints >= 0 ? options.warnPoints : DEFAULT_WARN_POINTS
 
   on('session.start', async ($, e, next) => {
     // immediate: sonst wartete /limitpause aus auf das Ende der Runde, und
@@ -281,6 +352,10 @@ export const register: Register = (on, options) => {
       isOffNow = false
       await update($, offState, () => false)
     }
+    if (word === 'einmal' || word === 'once') {
+      freeTurn = 'armed'
+      return { text: t().freeArmed }
+    }
 
     return { text: await statusText($) }
   })
@@ -291,14 +366,66 @@ export const register: Register = (on, options) => {
   // damit nichts stundenlang hängt. Scheitert die Prüfung, läuft die Anfrage
   // ungeprüft (die Engine ruft dann next für den Hook auf).
   on('turn.step', async function* ($, e, next) {
-    if (await isReleased($)) return yield* next(e)
+    const isAgent = e.agentId !== undefined
+    const isOff = await isReleased($)
+
+    // Freifahrt: Die erste Anfrage nach „/limitpause einmal“ bindet die Runde,
+    // alle ihre Schritte laufen durch; eine neue Runde macht die Pause wieder scharf.
+    let isFree = false
+    if (!isAgent && freeTurn !== null) {
+      if (freeTurn === 'armed') {
+        freeTurn = e.turnId
+        $.ui.toast(t().freeUsed)
+      }
+      if (freeTurn === e.turnId) isFree = true
+      else freeTurn = null
+    }
+
+    // Ohne Ausweiche gibt es bei „aus“ oder Freifahrt nichts zu prüfen.
+    if ((isOff || isFree) && fallbackModel === '') return yield* next(e)
+
+    let reading = await check($, e.model, false)
+
+    // Modell-Ausweiche gilt immer, auch für Agenten und bei „aus“: Sie hält
+    // nichts an, sie lenkt nur um, bevor die harte Sperre des Modells greift.
+    const alt = reroute(reading.windows, e.model, reading.gap, fallbackModel)
+    if (alt !== null) {
+      const hit = blocking(reading.windows, e.model, reading.gap)
+      if (hit !== null && !rerouted.has(windowKey(hit))) {
+        rerouted.add(windowKey(hit))
+        const when = hit.resetsAt === null ? t().noResetKnown : t().freeIn(untilText(hit.resetsAt - reading.now))
+        const text = t().rerouted(labelText(hit.label), pct(hit.percent), modelName(alt), modelName(e.model), when)
+        $.ui.log(text)
+        $.ui.toast(text)
+        void $.ui.notify(text, { title: t().notifyTitle }).catch(() => undefined)
+      }
+      return yield* next({ ...e, model: alt })
+    }
+
     // Agenten werden nie angehalten: Die Desktop-App beendet einen Agenten,
     // dessen Anfrage länger als 600 s hängt („Agent stalled“, 02.11.2026).
     // Erreicht er das Limit, scheitert nur seine Anfrage, nicht die Sitzung.
-    if (e.agentId !== undefined) return yield* next(e)
+    if (isAgent || isOff || isFree) return yield* next(e)
 
-    let reading = await check($, e.model, false)
+    // Vorwarnung, einmal je Fenster und Reset; die Statuszeile bleibt, bis
+    // kein Fenster mehr in der Warnzone ist.
+    const near = reading.hit === null ? warning(reading.windows, e.model, reading.gap, warnPoints, fallbackModel) : null
+    if (near !== null) {
+      const text = t().warn(labelText(near.label), pct(near.percent))
+      if (!warned.has(windowKey(near))) {
+        warned.add(windowKey(near))
+        $.ui.toast(text)
+        void $.ui.notify(text, { title: t().notifyTitle }).catch(() => undefined)
+      }
+      $.ui.status(t().warnStatus(labelText(near.label), pct(near.percent)))
+      warnStatusShown = true
+    } else if (warnStatusShown && reading.hit === null) {
+      $.ui.status(undefined)
+      warnStatusShown = false
+    }
+
     if (reading.hit === null) return yield* next(e)
+    warnStatusShown = false
 
     const aborted = { turnId: e.turnId, index: e.index, answer: '', toolUses: [], stopReason: null, usage: null }
     if (!canWait(reading.hit, reading.now)) {

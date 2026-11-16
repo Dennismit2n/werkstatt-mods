@@ -2,17 +2,19 @@ import { expect, test } from 'claude-code/testing'
 import type { Engine } from 'claude-code/testing'
 import type { On } from 'claude-code'
 
-import { appliesTo, blocking, canWait, gapFor, merge, noteJump } from '../hooks/register'
+import { appliesTo, blocking, canWait, gapFor, merge, modelName, noteJump, reroute, warning } from '../hooks/register'
 
 const STEP = { turnId: 't1', index: 0, model: 'claude-opus-5-5', messageCount: 3 }
 
 // Unter dem Mod steht hier die Engine: Uhr, Limits, Kindprozess und die Anfrage selbst.
 // resetsInMs null: Das 5-h-Fenster nennt keinen Reset-Zeitpunkt.
-function engine(on: On, fiveHour: number, resetsInMs: number | null) {
+// app: Antwort des App-Werkzeugs get_usage (sonst verweigert, dann nur Engine-Zahlen).
+function engine(on: On, fiveHour: number, resetsInMs: number | null, app?: unknown) {
   const seen = {
     fiveHour,
     now: 1_000_000,
     requests: 0,
+    models: [] as string[],
     naps: 0,
     aborts: 0,
     toasts: [] as string[],
@@ -24,7 +26,12 @@ function engine(on: On, fiveHour: number, resetsInMs: number | null) {
   const resetsAt = resetsInMs === null ? undefined : new Date(seen.now + resetsInMs).toISOString()
 
   on('clock.now', () => ({ value: seen.now }))
-  on('tool.check', () => ({ decision: 'deny', reason: 'kein App-Werkzeug im Test' }) as never)
+  if (app === undefined) {
+    on('tool.check', () => ({ decision: 'deny', reason: 'kein App-Werkzeug im Test' }) as never)
+  } else {
+    on('tool.check', () => ({ decision: 'allow' }) as never)
+    on('tool.call', () => ({ result: [{ type: 'text', text: JSON.stringify(app) }] }) as never)
+  }
   on('session.usage', () => ({
     value: {
       rateLimits: [
@@ -61,16 +68,17 @@ function engine(on: On, fiveHour: number, resetsInMs: number | null) {
     return { value: { command: 'limitpause' } } as never
   })
   on('session.start', (_, e) => ({ cwd: e.cwd }))
-  on('turn.step', async function* () {
+  on('turn.step', async function* (_, e) {
     seen.requests += 1
-    return { turnId: 't1', index: 0, answer: 'ok', toolUses: [], stopReason: 'end_turn', usage: null } as never
+    seen.models.push(e.model)
+    return { turnId: e.turnId, index: e.index, answer: 'ok', toolUses: [], stopReason: 'end_turn', usage: null } as never
   })
   return seen
 }
 
-async function step($: Engine, model = STEP.model, agentId?: string) {
+async function step($: Engine, model = STEP.model, agentId?: string, turnId = STEP.turnId) {
   // Die Stücke der Antwort sind egal, es zählt, was am Ende zurückkommt.
-  const stream = $.turn.step({ ...STEP, model, ...(agentId === undefined ? {} : { agentId }) })
+  const stream = $.turn.step({ ...STEP, turnId, model, ...(agentId === undefined ? {} : { agentId }) })
   let piece = await stream.next()
   while (!piece.done) piece = await stream.next()
   return piece.value
@@ -311,4 +319,96 @@ test('eigene Grenze: mit 90 % hält schon 89,8 % an', { options: { limitPercent:
   expect(result.answer).toBe('ok')
   expect(seen.naps).toBe(5)
   expect(seen.toasts.some(t => t.includes('Limit-Pause: 5 h steht bei 89,8 %'))).toBe(true)
+})
+
+// Die Zahlen der App: ganze Prozent, dazu das Wochenlimit eines Modells.
+function appUsage(fable: number, week = 40) {
+  const soon = new Date(1_000_000 + 3 * 86_400_000).toISOString()
+  return {
+    plan: {
+      status: 'ok',
+      windows: [
+        { label: '5-hour limit', percentUsed: 10, resetsAt: soon },
+        { label: 'Weekly · all models', percentUsed: week, resetsAt: soon },
+        { label: 'Weekly · Fable', percentUsed: fable, resetsAt: soon },
+      ],
+    },
+    context: { status: 'ok', percentUsed: 10 },
+  }
+}
+
+test('Ausweiche, Vorwarnung und Name: reine Rechnung', () => {
+  const full = [
+    { label: 'Woche', percent: 40, resetsAt: 500 },
+    { label: 'Woche Fable', percent: 99, resetsAt: 500 },
+  ]
+  // Fable voll, Opus frei: Opus. Mit Opus selbst oder ohne Ausweichmodell: nichts.
+  expect(reroute(full, 'claude-fable-5-2', 0.5, 'opus', 99.89)).toBe('opus')
+  expect(reroute(full, 'claude-opus-5-5', 0.5, 'opus', 99.89)).toBe(null)
+  expect(reroute(full, 'claude-fable-5-2', 0.5, '', 99.89)).toBe(null)
+  // Ist auch die allgemeine Woche voll, hilft kein anderes Modell.
+  expect(reroute([...full, { label: 'Woche', percent: 99, resetsAt: 500 }], 'claude-fable-5-2', 0.5, 'opus', 99.89)).toBe(null)
+  // Die 5 h voll: kein Modell-Fenster, also keine Ausweiche.
+  expect(reroute([{ label: '5 h', percent: 99, resetsAt: 500 }], 'claude-fable-5-2', 0.5, 'opus', 99.89)).toBe(null)
+
+  // Vorwarnung 3 Punkte vorher: 97 % (ganz, also +1) mit 0,5 Abstand warnt, 95 % nicht.
+  expect(warning([{ label: 'Woche', percent: 97, resetsAt: 500 }], 'claude-opus-5-5', 0.5, 3, 'opus', 99.89)?.label).toBe('Woche')
+  expect(warning([{ label: 'Woche', percent: 95, resetsAt: 500 }], 'claude-opus-5-5', 0.5, 3, 'opus', 99.89)).toBe(null)
+  expect(warning([{ label: 'Woche', percent: 97, resetsAt: 500 }], 'claude-opus-5-5', 0.5, 0, 'opus', 99.89)).toBe(null)
+  // Ein Modell-Fenster, das die Ausweiche abfängt, warnt nicht; ohne Ausweiche schon.
+  expect(warning([{ label: 'Woche Fable', percent: 97, resetsAt: 500 }], 'claude-fable-5-2', 0.5, 3, 'opus', 99.89)).toBe(null)
+  expect(warning([{ label: 'Woche Fable', percent: 97, resetsAt: 500 }], 'claude-fable-5-2', 0.5, 3, '', 99.89)?.label).toBe('Woche Fable')
+
+  expect(modelName('opus')).toBe('Opus')
+  expect(modelName('claude-fable-5-2')).toBe('Fable')
+})
+
+test('Fable-Woche voll: die Anfrage läuft mit Opus, ohne Stopp, Hinweis nur einmal', async ($, on) => {
+  const seen = engine(on, 10, 3_600_000, appUsage(99))
+
+  const first = await step($, 'claude-fable-5-2')
+  const second = await step($, 'claude-fable-5-2')
+
+  expect(first.answer).toBe('ok')
+  expect(second.answer).toBe('ok')
+  expect(seen.models).toEqual(['opus', 'opus'])
+  expect(seen.aborts).toBe(0)
+  expect(seen.logs.length).toBe(1)
+  expect(seen.logs[0]).toContain('mit Opus statt Fable')
+})
+
+test('auch ein Agent auf Fable weicht auf Opus aus', async ($, on) => {
+  const seen = engine(on, 10, 3_600_000, appUsage(99))
+
+  await step($, 'claude-fable-5-2', 'agent-1')
+
+  expect(seen.models).toEqual(['opus'])
+})
+
+test('Freifahrt: /limitpause einmal lässt genau eine Runde durch', async ($, on) => {
+  const seen = engine(on, 99.5, 3_600_000)
+
+  // Wie getippt: nur Befehl und Argument, den Rest füllt die Engine.
+  const said = await $.command.run({ command: 'limitpause', args: 'einmal' } as never)
+  expect(JSON.stringify(said)).toContain('Freifahrt')
+
+  // Zwei Schritte derselben Runde laufen durch, die nächste Runde wird gestoppt.
+  expect((await step($, STEP.model, undefined, 'frei')).answer).toBe('ok')
+  expect((await step($, STEP.model, undefined, 'frei')).answer).toBe('ok')
+  expect((await step($, STEP.model, undefined, 'danach')).answer).toBe('')
+  expect(seen.requests).toBe(2)
+  expect(seen.aborts).toBe(1)
+  expect(seen.toasts.some(t => t.includes('Freifahrt'))).toBe(true)
+})
+
+test('Vorwarnung: kurz vor der Grenze ein Hinweis auf /uebergabe, nur einmal, die Anfrage läuft', async ($, on) => {
+  const seen = engine(on, 97, 3_600_000)
+
+  await step($)
+  await step($)
+
+  expect(seen.requests).toBe(2)
+  expect(seen.aborts).toBe(0)
+  expect(seen.toasts.filter(t => t.includes('Limit naht')).length).toBe(1)
+  expect(seen.toasts[0]).toContain('/uebergabe')
 })

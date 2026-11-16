@@ -9,7 +9,7 @@ Zehn Mods für Claude Code aus der Werkstatt von Dennis_mit_2n. Ein Mod ist ein 
 | [statistik](./statistik) | Seitenleiste mit Nutzungsstatistik (Sitzungen, Nachrichten, Token, Kalender), Limits und Zählwerk | `/statistik` |
 | [werkstatt-band](./werkstatt-band) | Band über dem Eingabefeld: 5 h, Woche, Woche je Modell, Guthaben und Kontext in einer Zeile; dazu News-Erinnerung und Textprüfer für eigene Repos | `/limits` |
 | [waechter](./waechter) | Schützt eine gemeinsame Datei, stoppt zu lange Shell-Befehle, bremst parallele Subagenten, wählt ihnen ein sparsames Modell und verkleinert Browser-Fotos | `/agentenbremse` |
-| [limitpause](./limitpause) | Hält jede Modell-Anfrage vor der Limit-Grenze an und macht nach dem Reset von selbst weiter | `/limitpause` |
+| [limitpause](./limitpause) | Hält Modell-Anfragen vor der Limit-Grenze an, weicht bei vollem Modell-Wochenlimit auf Opus aus und warnt rechtzeitig vor der Übergabe | `/limitpause` |
 | [flugdeck](./flugdeck) | Seitenleiste „Agenten“: jeder Subagent mit Laufbalken, Zeit und letztem Werkzeug, dazu die anderen Sitzungen der App | `/agenten` |
 | [uebergabe](./uebergabe) | Erinnert ab einer Kontextgrenze an eine Übergabe, lässt Claude sie ausführlich schreiben und startet damit eine frische Sitzung | `/uebergabe`, `/stand` |
 | [inventar](./inventar) | Seitenleiste „In diesem Chat“: Aufgaben, benutzte Konnektoren, Skills, Links und die gelesenen und geschriebenen Dateien | `/inventar` |
