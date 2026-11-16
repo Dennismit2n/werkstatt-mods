@@ -1,6 +1,6 @@
 # werkstatt-mods
 
-Zehn Mods für Claude Code aus der Werkstatt von Dennis_mit_2n. Ein Mod ist ein Plugin mit einem Code-Modul, das Claude Code bei Ereignissen aufruft: Seitenleisten, ein Band über dem Eingabefeld, Schutzregeln. Alle zehn sprechen Deutsch und Englisch (Einstellung `language`), laufen in der Desktop-App und im Terminal und schicken nichts nach außen.
+Elf Mods für Claude Code aus der Werkstatt von Dennis_mit_2n. Ein Mod ist ein Plugin mit einem Code-Modul, das Claude Code bei Ereignissen aufruft: Seitenleisten, ein Band über dem Eingabefeld, Schutzregeln. Alle elf sprechen Deutsch und Englisch (Einstellung `language`), laufen in der Desktop-App und im Terminal und schicken nichts nach außen.
 
 **Seite mit Bildern, Installationszeilen und Prompts:** https://dennismit2n.github.io/mods.html · [Neuigkeiten](https://dennismit2n.github.io/werkstatt.html#mods-neuigkeiten)
 
@@ -16,6 +16,7 @@ Zehn Mods für Claude Code aus der Werkstatt von Dennis_mit_2n. Ein Mod ist ein 
 | [sichtschutz](./sichtschutz) | Schwärzt beim Bildschirmteilen Mailadressen, Nummern, Beträge und eigene Wörter im Verlauf | `/sichtschutz` |
 | [schalttafel](./schalttafel) | Seitenleiste „Mods“: alle Mods mit Version und Befehlen, dazu ein Schalter für die nächste Sitzung | `/mods` |
 | [ampel](./ampel) | Ampel über dem Eingabefeld: grün, wenn nichts mehr läuft, gelb, solange Claude oder etwas im Hintergrund arbeitet (mit Namen), rot, wenn etwas abgebrochen wurde oder fehlschlug | `/ampel` |
+| [registerkarten](./registerkarten) | Farbige Reiter in der Seitenleiste: Jeder eigene Abschnitt bekommt nach Thema einen Farbpunkt vor den Namen, neue färbt die Mod selbst | `/registerkarten` |
 
 Die Mods arbeiten einzeln. Zusammen greifen sie ineinander: Die Knöpfe „Statistik“ und „Agenten“ im Band klappen die beiden Seitenleisten auf und zu.
 
@@ -52,6 +53,7 @@ Im Terminal, am Prompt von Claude Code, je Mod eine Zeile:
 /plugin install sichtschutz --marketplace Dennismit2n/werkstatt-mods
 /plugin install schalttafel --marketplace Dennismit2n/werkstatt-mods
 /plugin install ampel --marketplace Dennismit2n/werkstatt-mods
+/plugin install registerkarten --marketplace Dennismit2n/werkstatt-mods
 ```
 
 Beim ersten Mal fragt Claude Code `Add marketplace?` (mit `y` bestätigen), dann nach dem Geltungsbereich (Enter für den Nutzer) und nach den Einstellungen des Mods, etwa der Sprache. Danach läuft der Mod sofort in dieser Sitzung und in jeder weiteren.
@@ -76,7 +78,7 @@ Zum Ausprobieren ohne Installation: `claude --plugin-dir ./flugdeck`, oder die O
 
 ## English
 
-Ten mods for Claude Code: a statistics pane, a one-line limits band, a guard (protected file, command length, agent brake, a cheaper model per subagent type, smaller browser screenshots), a limit pause that waits for the reset instead of failing, an agents pane with the session’s subagents and the app’s other sessions, a handoff that moves a long chat to a fresh session, a chat inventory pane, a screen guard that masks private data while you share your screen, a switchboard listing every mod, and a traffic light above the prompt that shows whether anything is still running, what runs in the background and what was stopped or failed. Every mod has a `language` setting (`de` or `en`). Install with `/plugin install <mod> --marketplace Dennismit2n/werkstatt-mods`; each folder’s README describes the mod in German, the settings tables name every option. Screenshots, install lines and ready-made prompts in all fourteen languages of the workshop: https://dennismit2n.github.io/mods.html
+Eleven mods for Claude Code: a statistics pane, a one-line limits band, a guard (protected file, command length, agent brake, a cheaper model per subagent type, smaller browser screenshots), a limit pause that waits for the reset instead of failing, an agents pane with the session’s subagents and the app’s other sessions, a handoff that moves a long chat to a fresh session, a chat inventory pane, a screen guard that masks private data while you share your screen, a switchboard listing every mod, and a traffic light above the prompt that shows whether anything is still running, what runs in the background and what was stopped or failed. And sidebar tabs: every section of your own in the Code tab sidebar gets a color dot by topic, like colored tabs in a binder; new ones are colored automatically. Every mod has a `language` setting (`de` or `en`). Install with `/plugin install <mod> --marketplace Dennismit2n/werkstatt-mods`; each folder’s README describes the mod in German, the settings tables name every option. Screenshots, install lines and ready-made prompts in all fourteen languages of the workshop: https://dennismit2n.github.io/mods.html
 
 ## Lizenz
 

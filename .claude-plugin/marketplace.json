@@ -4,8 +4,8 @@
     "name": "Dennis Ulmer",
     "url": "https://github.com/Dennismit2n"
   },
-  "description": "Zehn Mods für Claude Code aus der Werkstatt von Dennis_mit_2n: Statistik-Leiste, Limits-Band, Wächter, Limit-Pause, Agenten-Leiste, Übergabe, Chat-Inventar, Sichtschutz, Schalttafel und Ampel. Deutsch und Englisch. / Ten Claude Code mods: statistics pane, limits band, guard, limit pause, agents pane, handoff, chat inventory, screen guard, switchboard and traffic light. German and English.",
-  "version": "1.2.0",
+  "description": "Elf Mods für Claude Code aus der Werkstatt von Dennis_mit_2n: Statistik-Leiste, Limits-Band, Wächter, Limit-Pause, Agenten-Leiste, Übergabe, Chat-Inventar, Sichtschutz, Schalttafel, Ampel und Registerkarten. Deutsch und Englisch. / Eleven Claude Code mods: statistics pane, limits band, guard, limit pause, agents pane, handoff, chat inventory, screen guard, switchboard, traffic light and sidebar tabs. German and English.",
+  "version": "1.3.0",
   "plugins": [
     {
       "name": "statistik",
@@ -119,6 +119,17 @@
         "background",
         "band",
         "above-prompt"
+      ]
+    },
+    {
+      "name": "registerkarten",
+      "source": "./registerkarten",
+      "category": "productivity",
+      "tags": [
+        "mod",
+        "sidebar",
+        "sections",
+        "colors"
       ]
     }
   ]
