@@ -3,6 +3,7 @@ import type { Engine } from 'claude-code/testing'
 import type { On } from 'claude-code'
 
 import { appliesTo, blocking, canWait, gapFor, merge, modelName, noteJump, reroute, warning } from '../hooks/register'
+import { pct } from '../hooks/text'
 
 const STEP = { turnId: 't1', index: 0, model: 'claude-opus-5-5', messageCount: 3 }
 
@@ -413,8 +414,7 @@ test('Vorwarnung: kurz vor der Grenze ein Hinweis auf /uebergabe, nur einmal, di
   expect(seen.toasts[0]).toContain('/uebergabe')
 })
 
-test('Prozent: mindestens eine, höchstens zwei Nachkommastellen', async () => {
-  const { pct } = await import('../hooks/text')
+test('Prozent: mindestens eine, höchstens zwei Nachkommastellen', () => {
   expect(pct(74)).toBe('74,0 %')
   expect(pct(99.2)).toBe('99,2 %')
   expect(pct(99.261)).toBe('99,26 %')
