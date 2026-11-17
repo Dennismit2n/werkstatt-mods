@@ -50,6 +50,7 @@ const de = {
   stopped: (at: string, kind: string, name: string) => `${at} ${kind} „${name}“ gestoppt`,
   failed: (at: string, kind: string, name: string) => `${at} ${kind} „${name}“ fehlgeschlagen`,
   interrupted: (at: string, name: string) => `${at} Befehl „${name}“ unterbrochen`,
+  uncheckedClaim: (at: string) => `${at} „Geprüft“ gemeldet, aber in diesem Zug lief nichts, was es belegt`,
   allDone: 'Ampel grün: Alles ist fertig.',
   drawFailed: (why: string) => `Ampel konnte nicht zeichnen (${why})`,
 }
@@ -78,6 +79,7 @@ const en: typeof de = {
   stopped: (at: string, kind: string, name: string) => `${at} ${kind} "${name}" stopped`,
   failed: (at: string, kind: string, name: string) => `${at} ${kind} "${name}" failed`,
   interrupted: (at: string, name: string) => `${at} command "${name}" interrupted`,
+  uncheckedClaim: (at: string) => `${at} "Verified" claimed, but nothing ran this turn to back it`,
   allDone: 'Light green: everything has finished.',
   drawFailed: (why: string) => `Light could not draw (${why})`,
 }

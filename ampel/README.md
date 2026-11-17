@@ -15,11 +15,20 @@ Eine Ampel über dem Eingabefeld, die jederzeit zeigt, ob in der Sitzung gerade 
   - ein Hintergrundbefehl mit Fehlercode („fehlgeschlagen (Exit 3)“),
   - ein unterbrochener Befehl,
   - ein mit TaskStop gestoppter Lauf,
-  - ein fehlgeschlagener oder gestoppter Agent.
+  - ein fehlgeschlagener oder gestoppter Agent,
+  - ein „Geprüft“ ohne Nachweis (siehe unten).
 
   Die roten Zeilen bleiben stehen, bis du auf „Gesehen“ klickst. So siehst du auch später noch, ob du aus Versehen etwas gestoppt hast.
 
 Rot und Gelb können zusammen leuchten, wie an einer echten Ampel: Wurde etwas abgebrochen und Claude arbeitet trotzdem weiter, siehst du beides. Ist nach einem Hintergrundlauf alles fertig, meldet die Mod das einmal kurz („Ampel grün: Alles ist fertig.“).
+
+## Grün nur mit Nachweis
+
+Lässt du Claude jede Antwort mit einer Nachweiszeile beenden (etwa per Regel in der `CLAUDE.md`: „**Geprüft:** womit“, sonst „**Ungeprüft:**“ oder „**Geraten:**“), passt die Ampel auf diese Zeile auf. Steht in den letzten drei Zeilen einer Antwort „Geprüft:“, und in diesem Zug hat Claude selbst kein einziges prüfendes Werkzeug ohne Fehler ausgeführt (Befehl, Test, Datei lesen, Suche, Browser, Bildschirmfoto, Agent), kommt eine rote Zeile dazu: „„Geprüft“ gemeldet, aber in diesem Zug lief nichts, was es belegt“.
+
+<p><img src="../docs/ampel-nachweis.png" alt="Die Ampel mit roter und grüner Lampe, daneben Alles steht, nichts läuft, darunter rot 02:20 „Geprüft“ gemeldet, aber in diesem Zug lief nichts, was es belegt, und der Knopf Gesehen" width="736"></p>
+
+Nicht als Nachweis zählen Werkzeuge, die nur schreiben, planen oder reden (Write, Edit, Aufgabenliste, Rückfragen, Skills) und die stillen Abrufe anderer Mods. Die Grenze: Die Ampel sieht nur, dass etwas lief, nicht ob es die Aussage wirklich belegt. Sie fängt das grobe falsche Grün ab, also ein „Geprüft“ ganz ohne Versuch. Ohne Nachweiszeile in deinen Antworten passiert nichts.
 
 Die Mod liest nur mit, was die Engine ohnehin meldet: Beginn und Ende jedes Zugs, Werkzeugaufrufe, Meldungen fertiger Hintergrundläufe, die Agentenliste und am Zugende die Liste der laufenden Hintergrundarbeit. Sie ruft kein Modell auf und schickt nichts nach außen. Die Nebensitzungen liest sie über das App-Werkzeug `list_sessions`, und nur, wenn das ohne Freigabe-Dialog geht.
 
@@ -57,10 +66,10 @@ Zum Entwickeln aus einem Ordner: `claude --plugin-dir <Pfad zu ampel>`, oder den
 
 ## Prüfen
 
-`claude plugin validate <Ordner>` und `claude plugin test <Ordner>` (9 Tests).
+`claude plugin validate <Ordner>` und `claude plugin test <Ordner>` (11 Tests).
 
 ## English
 
-A traffic light above the prompt that always shows whether anything in the session is still running. Green: nothing is running. Amber: Claude is working (with a clock and the current tool), or something still runs in the background: background commands, monitors, subagents and running linked sessions of the desktop app, each with its name and run time. Red: something was interrupted, stopped or failed (an interrupted turn, a background command with a non-zero exit code, a TaskStop, a failed agent); red lines stay until you press "Seen". Red and amber can light together. `/ampel` prints the same state as text. Set `language` to `en` for English texts. Install with `/plugin install ampel --marketplace Dennismit2n/werkstatt-mods`.
+A traffic light above the prompt that always shows whether anything in the session is still running. Green: nothing is running. Amber: Claude is working (with a clock and the current tool), or something still runs in the background: background commands, monitors, subagents and running linked sessions of the desktop app, each with its name and run time. Red: something was interrupted, stopped or failed (an interrupted turn, a background command with a non-zero exit code, a TaskStop, a failed agent); red lines stay until you press "Seen". Red also flags a "Verified:" line at the end of an answer when Claude ran no checking tool at all in that turn (green only with proof). Red and amber can light together. `/ampel` prints the same state as text. Set `language` to `en` for English texts. Install with `/plugin install ampel --marketplace Dennismit2n/werkstatt-mods`.
 
 Lizenz: MIT.

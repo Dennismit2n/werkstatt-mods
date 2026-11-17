@@ -39,6 +39,40 @@ let incidentSeq = 0
 const inflight = new Map<string, string>()
 // Ein von TaskStop gestoppter Lauf: Die spätere Meldung „killed“ trägt ihn nicht doppelt ein.
 const stoppedHere = new Set<string>()
+// Lief in diesem Zug der Hauptsitzung ein prüfendes Werkzeug ohne Fehler?
+let checkedThisTurn = false
+
+// Werkzeuge, die nur schreiben, planen oder reden: Sie belegen kein „Geprüft“.
+const NO_PROOF = new Set([
+  'Write',
+  'Edit',
+  'NotebookEdit',
+  'TodoWrite',
+  'AskUserQuestion',
+  'ToolSearch',
+  'Skill',
+  'SendUserFile',
+  'SendMessage',
+  'ScheduleWakeup',
+  'EnterPlanMode',
+  'ExitPlanMode',
+])
+const NO_PROOF_PREFIX = ['mcp__ccd_turn__', 'mcp__ccd_session__', 'mcp__ccd_sidebar__', 'mcp__ccd_view__', 'mcp__ccd_window__']
+
+export function isProofTool(name: string): boolean {
+  return !NO_PROOF.has(name) && !NO_PROOF_PREFIX.some(prefix => name.startsWith(prefix))
+}
+
+// Meldet die Antwort in ihren letzten Zeilen „Geprüft:“ (auch fett oder als
+// Listenpunkt)? „Ungeprüft:“ und ein „geprüft:“ mitten im Satz zählen nicht.
+export function claimsChecked(answer: string): boolean {
+  const tail = answer
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line !== '')
+    .slice(-3)
+  return tail.some(line => /^[>*_\-\s]*(?:geprüft|verified)[*_\s]*:/i.test(line))
+}
 
 export function shorten(text: string, max = NAME_MAX): string {
   const one = text.replace(/\s+/g, ' ').trim()
@@ -263,6 +297,7 @@ export const register: Register = (on, options) => {
       await update($, workingSince, () => time)
       await update($, now, () => time)
       await update($, tool, () => null)
+      checkedThisTurn = false
       hadWork = true
       startTicker($)
     }
@@ -280,6 +315,9 @@ export const register: Register = (on, options) => {
       if (e.reason === 'aborted') await addIncident($, text.turnAborted(await at($)))
       else if (e.reason === 'error') await addIncident($, text.turnError(await at($)))
       else if (e.reason === 'refusal') await addIncident($, text.turnRefused(await at($)))
+      // Grün nur mit Nachweis: „Geprüft:“ ohne einen einzigen Prüflauf im Zug wird rot.
+      if (e.reason === 'answer' && !checkedThisTurn && claimsChecked(e.answer)) await addIncident($, text.uncheckedClaim(await at($)))
+      checkedThisTurn = false
       await syncAgents($)
       await maybeDone($)
     }
@@ -310,6 +348,15 @@ export const register: Register = (on, options) => {
       }
     }
     try {
+      // Nur ein Aufruf des Modells selbst zählt als Prüflauf, keine stillen Abrufe anderer Mods.
+      if (
+        e.agentId === undefined &&
+        next.origin?.plugin === 'engine' &&
+        result.deny === undefined &&
+        !result.isError &&
+        isProofTool(String(e.tool))
+      )
+        checkedThisTurn = true
       if (result.deny === undefined && !result.isError) {
         const name = String(e.tool)
         const out = result.result as Record<string, unknown> | undefined

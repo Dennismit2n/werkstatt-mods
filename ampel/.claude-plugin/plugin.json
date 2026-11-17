@@ -1,7 +1,7 @@
 {
   "name": "ampel",
-  "version": "0.1.0",
-  "description": "Ampel über dem Eingabefeld: grün, wenn nichts mehr läuft, gelb, solange Claude oder etwas im Hintergrund arbeitet, rot, wenn etwas abgebrochen wurde oder fehlschlug",
+  "version": "0.2.0",
+  "description": "Ampel über dem Eingabefeld: grün, wenn nichts mehr läuft, gelb, solange Claude oder etwas im Hintergrund arbeitet, rot, wenn etwas abgebrochen wurde, fehlschlug oder Claude „Geprüft“ meldet, ohne etwas geprüft zu haben",
   "author": {
     "name": "Dennis Ulmer",
     "url": "https://github.com/Dennismit2n"

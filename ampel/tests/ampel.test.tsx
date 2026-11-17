@@ -2,7 +2,7 @@ import { expect, mock, test } from 'claude-code/testing'
 import type { TestBody } from 'claude-code/testing'
 import type { AgentInfo } from 'claude-code'
 
-import { parseNotice, parseSessions, toolLabel } from '../hooks/register'
+import { claimsChecked, isProofTool, parseNotice, parseSessions, toolLabel } from '../hooks/register'
 
 const BAND = {
   plugin: 'ampel',
@@ -58,10 +58,10 @@ function engine(on: Parameters<TestBody>[1]) {
 
 type Engine = Parameters<TestBody>[0]
 const start = ($: Engine) => $.turn.start({ text: 'los', turnId: 't1' })
-const end = ($: Engine, reason: 'answer' | 'aborted' | 'error' = 'answer') =>
+const end = ($: Engine, reason: 'answer' | 'aborted' | 'error' = 'answer', answer = 'fertig') =>
   $.turn.complete({
     turnId: 't1',
-    answer: 'fertig',
+    answer,
     durationMs: 1000,
     isAborted: reason === 'aborted',
     reason,
@@ -181,6 +181,37 @@ test('Unteragent: erscheint mit Beschreibung, fehlgeschlagen wird rot', async ($
   await ui.unmount()
 })
 
+test('Nachweis: „Geprüft“ ohne Prüflauf wird rot, mit Befehl bleibt es still', async ($, on) => {
+  engine(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
+
+  // Nur geschrieben, nichts ausgeführt, trotzdem „Geprüft“: rot.
+  await start($)
+  await $.tool.call({ tool: 'Edit', file_path: '/a.ts', old_string: 'a', new_string: 'b' } as never)
+  await end($, 'answer', 'Fertig.\n\n**Geprüft:** läuft')
+  expect(await texts(ui, /„Geprüft“ gemeldet/)).toMatch(/aber in diesem Zug lief nichts, was es belegt/)
+  await ui.press({ key: 'ampel-seen' })
+
+  // Ein Befehl lief: kein Vorfall.
+  await start($)
+  await $.tool.call({ tool: 'Bash', command: 'npm test' } as never)
+  await end($, 'answer', 'Fertig.\n\n**Geprüft:** npm test grün')
+  expect(await texts(ui, /✗/)).toBeUndefined()
+
+  // Der Prüflauf gilt nur für seinen Zug.
+  await start($)
+  await end($, 'answer', 'Nochmal.\n\nGeprüft: wie oben')
+  expect(await texts(ui, /„Geprüft“ gemeldet/)).toMatch(/gemeldet/)
+  await ui.press({ key: 'ampel-seen' })
+
+  // „Ungeprüft“ ist ehrlich und bleibt still.
+  await start($)
+  await end($, 'answer', 'Fertig.\n\n**Ungeprüft:** wirkt erst in neuer Sitzung')
+  expect(await texts(ui, /✗/)).toBeUndefined()
+  await ui.unmount()
+})
+
 test('Englisch', { options: { language: 'en' } }, async ($, on) => {
   engine(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
@@ -202,4 +233,18 @@ test('Hilfsfunktionen: Meldung, Sitzungen, Werkzeugtext', async () => {
   ).toEqual([{ id: 's1', title: 'Build' }])
   expect(toolLabel({ tool: 'mcp__ccd_session__start_session' })).toBe('start_session')
   expect(toolLabel({ tool: 'Bash', command: 'npm test', description: '' })).toBe('Bash: npm test')
+})
+
+test('Hilfsfunktionen: Nachweiszeile erkennen', async () => {
+  expect(claimsChecked('x\n\n**Geprüft:** Test grün')).toBe(true)
+  expect(claimsChecked('x\n\n**Geprüft**: Test grün')).toBe(true)
+  expect(claimsChecked('x\n- Geprüft: Test grün')).toBe(true)
+  expect(claimsChecked('done\n\nVerified: tests pass')).toBe(true)
+  expect(claimsChecked('x\n\n**Ungeprüft:** neue Sitzung')).toBe(false)
+  expect(claimsChecked('Ich habe es geprüft: passt.')).toBe(false)
+  expect(claimsChecked('**Geprüft:** a\n\nb\n\nc\n\nd\n\ne')).toBe(false)
+  expect(isProofTool('Bash')).toBe(true)
+  expect(isProofTool('mcp__Claude_Browser__computer')).toBe(true)
+  expect(isProofTool('Edit')).toBe(false)
+  expect(isProofTool('mcp__ccd_turn__wrap_up')).toBe(false)
 })

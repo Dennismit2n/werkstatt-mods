@@ -15,7 +15,7 @@ Elf Mods für Claude Code aus der Werkstatt von Dennis_mit_2n. Ein Mod ist ein P
 | [inventar](./inventar) | Seitenleiste „In diesem Chat“: Aufgaben, benutzte Konnektoren, Skills, Links und die gelesenen und geschriebenen Dateien | `/inventar` |
 | [sichtschutz](./sichtschutz) | Schwärzt beim Bildschirmteilen Mailadressen, Nummern, Beträge und eigene Wörter im Verlauf | `/sichtschutz` |
 | [schalttafel](./schalttafel) | Seitenleiste „Mods“: alle Mods mit Version und Befehlen, dazu ein Schalter für die nächste Sitzung | `/mods` |
-| [ampel](./ampel) | Ampel über dem Eingabefeld: grün, wenn nichts mehr läuft, gelb, solange Claude oder etwas im Hintergrund arbeitet (mit Namen), rot, wenn etwas abgebrochen wurde oder fehlschlug | `/ampel` |
+| [ampel](./ampel) | Ampel über dem Eingabefeld: grün, wenn nichts mehr läuft, gelb, solange Claude oder etwas im Hintergrund arbeitet (mit Namen), rot, wenn etwas abgebrochen wurde, fehlschlug oder Claude „Geprüft“ ohne Nachweis meldet | `/ampel` |
 | [registerkarten](./registerkarten) | Farbige Reiter in der Seitenleiste: Jeder eigene Abschnitt bekommt nach Thema einen Farbpunkt vor den Namen, neue färbt die Mod selbst | `/registerkarten` |
 
 Die Mods arbeiten einzeln. Zusammen greifen sie ineinander: Die Knöpfe „Statistik“ und „Agenten“ im Band klappen die beiden Seitenleisten auf und zu.
