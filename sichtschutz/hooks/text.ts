@@ -26,7 +26,7 @@ const en: typeof de = {
   commandDescription: 'Turns the screen guard for screen sharing on or off: mail addresses, numbers, amounts and your own words are masked',
   argumentHint: '[on|off]',
   turnedOn:
-    'Screen guard on. In the transcript mail addresses, phone numbers, amounts, IBANs, the name of the user folder and your own words are masked. What is stored and sent to the model stays the original. The mod does not recognise names by itself: add them in the setting "Own words".',
+    'Screen guard on. In the transcript mail addresses, phone numbers, amounts, IBANs, the name of the user folder and your own words are masked. What is stored and sent to the model stays the original. The mod does not recognize names by itself: add them in the setting "Own words".',
   turnedOff: 'Screen guard off. The transcript shows everything again.',
   status: 'Screen guard on',
   band: 'Screen guard on: the transcript is masked.',

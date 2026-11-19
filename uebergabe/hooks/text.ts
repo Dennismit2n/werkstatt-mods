@@ -88,7 +88,7 @@ const de = {
 
 const en: typeof de = {
   commandDescription: 'Has Claude write a detailed handoff a fresh session continues from',
-  started: 'Handoff requested. Claude writes it now; afterwards the band shows the button for the new session.',
+  started: 'Handoff requested. Claude writes it now; afterward the band shows the button for the new session.',
   busy: 'The handoff is already being written.',
   hint: (tokens: string) => `Context at ${tokens} tokens: time for a handoff to a fresh session?`,
   write: 'Write handoff',
@@ -104,12 +104,12 @@ const en: typeof de = {
     [
       `Bring the handoff up to date: ${file}`,
       'Work has continued in this session since it was written. Read the file and work in everything that was added or changed since: state, decisions, files touched, open points and their order, pitfalls.',
-      'Change the affected sections themselves instead of appending an addendum. What is done reads as done afterwards, and nothing in the file contradicts itself. The file stays the same.',
+      'Change the affected sections themselves instead of appending an addendum. What is done reads as done afterward, and nothing in the file contradicts itself. The file stays the same.',
       `In the last line of your reply name only the path, exactly like this: ${MARKER.en} <full path of the file>`,
     ].join('\n'),
   statusDescription: 'Short status in the chat: what is done, what is open, what waits for you and where it continues',
   statusStarted: 'Status requested. Claude answers with the overview in a moment.',
-  statusBusy: 'The handoff is being written right now. /stand works afterwards.',
+  statusBusy: 'The handoff is being written right now. /stand works afterward.',
   statusFailed: (why: string) => `Could not request the status: ${why}`,
   statusInstruction: [
     'Tell me briefly where this session stands. Write and change no file for it, the answer goes here in the chat only.',
@@ -120,7 +120,7 @@ const en: typeof de = {
     '**Not saved:** what is only local, not committed, not pushed or not published.',
     '**Waiting for you:** every decision, approval or action that is mine, unanswered questions of yours included.',
     '**Next step:** the one step that moves this on, and who takes it.',
-    'An empty heading gets "nothing". No introduction, no closing line, and do not start working by yourself afterwards.',
+    'An empty heading gets "nothing". No introduction, no closing line, and do not start working by yourself afterward.',
   ].join('\n'),
   startNew: 'Start new session',
   copyPath: 'Copy path',
@@ -139,7 +139,7 @@ const en: typeof de = {
       '4. Every file read, created or changed, with its full path and one sentence about it.',
       '5. Skills, tools, connectors and links used.',
       '6. Open points and the next steps in the order they are due.',
-      '7. Pitfalls: what did not work and how to recognise it.',
+      '7. Pitfalls: what did not work and how to recognize it.',
       '8. Rules and preferences of the user that applied in this session.',
       `Write it as a Markdown file ${where}. Point to files instead of repeating their content, and leave out nothing the new session needs.`,
       `In the last line of your reply name only the path, exactly like this: ${MARKER.en} <full path of the file>`,
